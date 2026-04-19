@@ -1,3 +1,9 @@
+const express = require('express');
+const router = express.Router();
+const { getPool, sql } = require('../db');
+const { parseTask } = require('../services/ai');
+const authenticate = require('../middleware/auth');
+
 router.post('/', authenticate, async (req, res) => {
     const pool = await getPool();
     const id = require('crypto').randomUUID();
@@ -23,3 +29,5 @@ router.post('/', authenticate, async (req, res) => {
         } catch (e) { console.error('AI parse failed:', e.message); }
     });
 });
+
+module.exports = router;

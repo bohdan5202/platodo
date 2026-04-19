@@ -4,6 +4,21 @@ const sql = require('mssql');
 const { replanConflict } = require('../shared/ai');
 const { sendPush } = require('../shared/fcm');
 
+async function getTasksForDay(pool, userId, day) {
+    const result = await pool.request()
+        .input('uid', sql.UniqueIdentifier, userId)
+        .input('day', sql.Date, day)
+        .query('SELECT title, subject, deadline, priority FROM tasks WHERE user_id=@uid AND CAST(deadline AS DATE)=@day AND is_done=0');
+    return result.recordset;
+}
+
+async function getUser(pool, userId) {
+    const result = await pool.request()
+        .input('uid', sql.UniqueIdentifier, userId)
+        .query('SELECT id, fcm_token FROM users WHERE id=@uid');
+    return result.recordset[0];
+}
+
 app.timer('DeadlineWatcher', {
     schedule: '0 */30 * * * *',
     handler: async (myTimer, context) => {
