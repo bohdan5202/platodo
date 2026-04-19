@@ -2,7 +2,7 @@ const sql = require('mssql');
 require('dotenv').config();
 
 const config = {
-    connectionString: process.env.Server
+    connectionString: process.env.AZURE_SQL_CONNECTION_STRING
 };
 
 let pool;
