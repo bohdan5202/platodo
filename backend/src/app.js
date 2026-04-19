@@ -14,5 +14,9 @@ app.use('/auth', authRoutes);
 app.use('/tasks', tasksRoutes);
 app.use('/planner', plannerRoutes);
 
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
