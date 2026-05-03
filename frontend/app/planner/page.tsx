@@ -30,21 +30,34 @@ export default function PlannerPage() {
     }
   };
 
-  const pendingSync = tasks.filter(t => t.planned_date === null && !t.is_done);
+  const pendingSync = tasks.filter(t => !t.is_done && (t.title === null || t.planned_date === null));
   const overdue = tasks.filter(t => t.planned_date && isPast(parseISO(t.planned_date)) && !isToday(parseISO(t.planned_date)) && !t.is_done);
   const today = tasks.filter(t => t.planned_date && isToday(parseISO(t.planned_date)));
   const tomorrow = tasks.filter(t => t.planned_date && isTomorrow(parseISO(t.planned_date)));
-  const upcoming = tasks.filter(t => t.planned_date && isAfter(parseISO(t.planned_date), endOfTomorrow()));
-  const completedWithoutDate = tasks.filter(t => t.planned_date === null && t.is_done);
+  const upcomingRaw = tasks.filter(t => t.planned_date && isAfter(parseISO(t.planned_date), endOfTomorrow()));
 
-  // Group sections
+  // Group upcoming tasks by their exact date (dd.MM.yyyy)
+  const upcomingByDate = upcomingRaw.reduce<Record<string, typeof tasks>>((acc, task) => {
+    const key = format(parseISO(task.planned_date!), 'dd.MM.yyyy');
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(task);
+    return acc;
+  }, {});
+  // Sort the date keys chronologically
+  const upcomingDateKeys = Object.keys(upcomingByDate).sort((a, b) => {
+    const [da, ma, ya] = a.split('.').map(Number);
+    const [db, mb, yb] = b.split('.').map(Number);
+    return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
+  });
+
+  // Named sections (before the date groups)
   const sections = [
     { title: "Pending AI Sync", tasks: pendingSync, color: "text-[#F59E0B]", badge: "bg-[#FEF3C7]" },
     { title: "Overdue (Planned)", tasks: overdue, color: "text-[#EF4444]", badge: "bg-[#FEE2E2]" },
     { title: "Today", tasks: today, color: "text-[#6B5CE7]", badge: "bg-[#EEF0FF]" },
     { title: "Tomorrow", tasks: tomorrow, color: "text-[#0EA5A0]", badge: "bg-[#E0F7F6]" },
-    { title: "Upcoming", tasks: upcoming, color: "text-[#8888AA]", badge: "bg-[#F7F8FC]" },
   ];
+
 
   const handleReschedule = (taskId: string, date: string | null) => {
     updateTaskDate(taskId, date);
@@ -179,7 +192,7 @@ export default function PlannerPage() {
         </div>
       )}
 
-      {/* Task List by Section */}
+      {/* Named sections: Pending, Overdue, Today, Tomorrow */}
       <div className="space-y-10">
         {sections.map(section => {
           if (section.tasks.length === 0) return null;
@@ -200,6 +213,23 @@ export default function PlannerPage() {
             </div>
           );
         })}
+
+        {/* Date-grouped upcoming tasks */}
+        {upcomingDateKeys.map(dateKey => (
+          <div key={dateKey} className="space-y-4">
+            <div className="flex items-center gap-3 ml-1">
+              <h2 className="text-sm font-bold tracking-widest uppercase text-[#8888AA]">
+                {dateKey}
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#F7F8FC] text-[#8888AA]">
+                {upcomingByDate[dateKey].length}
+              </span>
+            </div>
+            <div className="space-y-3">
+              {upcomingByDate[dateKey].map(renderTask)}
+            </div>
+          </div>
+        ))}
         
         {tasks.length === 0 && !isLoading && (
           <div className="text-center py-16 bg-white rounded-[24px] border border-[#E4E6F0] border-dashed">

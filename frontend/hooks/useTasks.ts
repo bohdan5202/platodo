@@ -50,8 +50,11 @@ export const useTasks = () => {
 
       const updatedTasks = await fetchTasks();
       if (updatedTasks) {
-        const hasUnparsedTasks = updatedTasks.some(task => task.title === null);
-        if (hasUnparsedTasks) {
+        // Poll until Thread 1 (AI parser) sets the title.
+        // Thread 3 (plannerSync) fires right after Thread 1, so planned_date
+        // will also be set before the next 3s poll cycle completes.
+        const hasPendingParse = updatedTasks.some(task => task.title === null);
+        if (hasPendingParse) {
           setTimeout(poll, 3000);
         } else {
           pollRef.current = false;
@@ -67,8 +70,9 @@ export const useTasks = () => {
 
   // Trigger polling check whenever tasks change
   useEffect(() => {
-    const hasUnparsedTasks = tasks.some(task => task.title === null);
-    if (hasUnparsedTasks && !pollRef.current) {
+    // Only start polling when a task is mid-parse (title not yet set by Thread 1)
+    const hasPendingParse = tasks.some(task => task.title === null);
+    if (hasPendingParse && !pollRef.current) {
       startPolling();
     }
 
