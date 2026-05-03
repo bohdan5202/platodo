@@ -38,7 +38,7 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const pool = await getPool();
-        const { is_done, planned_date, title, subject, deadline } = req.body;
+        const { is_done, planned_date, title, subject, deadline, priority } = req.body;
         
         const request = pool.request()
             .input('id', sql.UniqueIdentifier, req.params.id)
@@ -64,6 +64,10 @@ router.put('/:id', authenticate, async (req, res) => {
         if (deadline !== undefined) {
             updates.push('deadline=@deadline');
             request.input('deadline', sql.DateTime2, deadline ? new Date(deadline) : null);
+        }
+        if (priority !== undefined) {
+            updates.push('priority=@priority');
+            request.input('priority', sql.Int, priority);
         }
 
         if (updates.length > 0) {

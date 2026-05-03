@@ -1,30 +1,56 @@
 "use client";
 
 import { useState } from 'react';
-import { useTasks } from '../../hooks/useTasks';
-import { CheckCircle2, Circle, Sparkles, AlertCircle, Trash2, Loader2 } from 'lucide-react';
+import { useTasks, Task } from '../../hooks/useTasks';
+import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X } from 'lucide-react';
 import { format, parseISO, isToday, isThisWeek } from 'date-fns';
 
+const PRIORITIES = [
+  { value: 5, label: 'P5 — Critical', color: 'text-[#EF4444]', bg: 'bg-[#FEE2E2]' },
+  { value: 4, label: 'P4 — High',     color: 'text-[#F59E0B]', bg: 'bg-[#FEF3C7]' },
+  { value: 3, label: 'P3 — Medium',   color: 'text-[#6B5CE7]', bg: 'bg-[#EEF0FF]' },
+  { value: 2, label: 'P2 — Low',      color: 'text-[#0EA5A0]', bg: 'bg-[#E0F7F6]' },
+  { value: 1, label: 'P1 — Minimal',  color: 'text-[#8888AA]', bg: 'bg-[#F7F8FC]' },
+];
+
 export default function DashboardPage() {
-  const { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask } = useTasks();
+  const { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTask } = useTasks();
   const [newTaskText, setNewTaskText] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', subject: '', deadline: '', priority: 1 });
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
-
     addTask(newTaskText);
     setNewTaskText('');
   };
 
   const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 5: return 'bg-[#FEE2E2] text-[#EF4444]'; // Danger (P5)
-      case 4: return 'bg-[#FEF3C7] text-[#F59E0B]'; // Amber (P4)
-      case 3: return 'bg-[#EEF0FF] text-[#6B5CE7]'; // Violet (P3)
-      case 2: return 'bg-[#E0F7F6] text-[#0EA5A0]'; // Teal (P2)
-      case 1: default: return 'bg-[#F7F8FC] text-[#8888AA]'; // Gray (P1)
-    }
+    const p = PRIORITIES.find(p => p.value === priority);
+    return p ? `${p.bg} ${p.color}` : 'bg-[#F7F8FC] text-[#8888AA]';
+  };
+
+  const startEditing = (task: Task) => {
+    setEditingId(task.id);
+    setEditForm({
+      title: task.title || '',
+      subject: task.subject || '',
+      deadline: task.deadline ? format(parseISO(task.deadline), 'yyyy-MM-dd') : '',
+      priority: task.priority ?? 1,
+    });
+    setOpenMenuId(null);
+  };
+
+  const saveEdit = (id: string) => {
+    updateTask(id, {
+      title: editForm.title,
+      subject: editForm.subject || null,
+      deadline: editForm.deadline ? new Date(editForm.deadline).toISOString() : null,
+      priority: editForm.priority,
+    });
+    setEditingId(null);
   };
 
   if (isLoading) {
@@ -38,13 +64,12 @@ export default function DashboardPage() {
     );
   }
 
-  // Calculate Stats
   const tasksToday = tasks.filter(t => t.deadline && isToday(parseISO(t.deadline)) && !t.is_done).length;
   const dueThisWeek = tasks.filter(t => t.deadline && isThisWeek(parseISO(t.deadline)) && !t.is_done).length;
   const completedTasks = tasks.filter(t => t.is_done).length;
 
   return (
-    <div className="max-w-4xl mx-auto pb-12">
+    <div className="max-w-4xl mx-auto pb-12" onClick={() => { setOpenMenuId(null); }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -114,24 +139,23 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {tasks.map(task => {
               const isParsing = task.title === null;
+              const isEditing = editingId === task.id;
 
               return (
                 <div
                   key={task.id}
-                  className={`bg-white p-4 sm:p-5 rounded-[20px] border flex items-center gap-4 transition-all group ${task.is_done ? 'border-[#E4E6F0] opacity-60 bg-[#F7F8FC]' : 'border-[#E4E6F0] shadow-sm hover:border-[#C4BEFA] hover:shadow-md'
-                    }`}
+                  onClick={e => e.stopPropagation()}
+                  className={`bg-white p-4 sm:p-5 rounded-[20px] border flex items-start gap-4 transition-all group ${task.is_done ? 'border-[#E4E6F0] opacity-60 bg-[#F7F8FC]' : 'border-[#E4E6F0] shadow-sm hover:border-[#C4BEFA] hover:shadow-md'}`}
                 >
+                  {/* Checkbox */}
                   <button
                     onClick={() => toggleTaskDone(task.id, task.is_done)}
-                    className={`flex-shrink-0 transition-colors active:scale-95 ${task.is_done ? 'text-[#10B981]' : 'text-[#CDD0E8] hover:text-[#6B5CE7]'}`}
+                    className={`flex-shrink-0 mt-0.5 transition-colors active:scale-95 ${task.is_done ? 'text-[#10B981]' : 'text-[#CDD0E8] hover:text-[#6B5CE7]'}`}
                   >
-                    {task.is_done ? (
-                      <CheckCircle2 className="w-7 h-7" />
-                    ) : (
-                      <Circle className="w-7 h-7" />
-                    )}
+                    {task.is_done ? <CheckCircle2 className="w-7 h-7" /> : <Circle className="w-7 h-7" />}
                   </button>
 
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     {isParsing ? (
                       <div className="flex items-center gap-2">
@@ -141,7 +165,60 @@ export default function DashboardPage() {
                           AI parsing...
                         </span>
                       </div>
+                    ) : isEditing ? (
+                      /* ── Inline Edit Form ── */
+                      <div className="space-y-2.5">
+                        <input
+                          autoFocus
+                          value={editForm.title}
+                          onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                          placeholder="Task title"
+                          className="w-full text-[15px] font-medium border border-[#C4BEFA] rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-[#6B5CE7]/20 text-[#14142B]"
+                        />
+                        <div className="flex gap-2 flex-wrap">
+                          <input
+                            value={editForm.subject}
+                            onChange={e => setEditForm(f => ({ ...f, subject: e.target.value }))}
+                            placeholder="Subject (optional)"
+                            className="flex-1 min-w-[120px] text-sm border border-[#E4E6F0] rounded-xl px-3 py-1.5 outline-none focus:border-[#6B5CE7] text-[#14142B]"
+                          />
+                          <input
+                            type="date"
+                            value={editForm.deadline}
+                            onChange={e => setEditForm(f => ({ ...f, deadline: e.target.value }))}
+                            className="text-sm border border-[#E4E6F0] rounded-xl px-3 py-1.5 outline-none focus:border-[#6B5CE7] text-[#14142B] cursor-pointer"
+                          />
+                        </div>
+                        {/* Priority selector */}
+                        <div className="flex gap-1.5 flex-wrap">
+                          {PRIORITIES.map(p => (
+                            <button
+                              key={p.value}
+                              type="button"
+                              onClick={() => setEditForm(f => ({ ...f, priority: p.value }))}
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold border-2 transition-all ${editForm.priority === p.value ? `${p.bg} ${p.color} border-current` : 'bg-transparent text-[#8888AA] border-[#E4E6F0] hover:border-[#C4BEFA]'}`}
+                            >
+                              P{p.value}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveEdit(task.id)}
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-[#6B5CE7] text-white text-sm font-semibold rounded-xl hover:bg-[#5a4cdb] transition-colors"
+                          >
+                            <Check className="w-4 h-4" /> Save
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="flex items-center gap-1.5 px-4 py-1.5 border border-[#E4E6F0] text-[#8888AA] text-sm font-medium rounded-xl hover:bg-[#F7F8FC] transition-colors"
+                          >
+                            <X className="w-4 h-4" /> Cancel
+                          </button>
+                        </div>
+                      </div>
                     ) : (
+                      /* ── Normal View ── */
                       <div className="flex flex-col">
                         <span className={`text-[15px] font-medium truncate ${task.is_done ? 'line-through text-[#8888AA]' : 'text-[#14142B]'}`}>
                           {task.title}
@@ -163,17 +240,40 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {!isParsing && (
-                    <div className="flex items-center gap-3">
+                  {/* Right controls */}
+                  {!isParsing && !isEditing && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${getPriorityColor(task.priority)}`}>
                         P{task.priority}
                       </span>
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="text-[#CDD0E8] hover:text-[#EF4444] opacity-0 group-hover:opacity-100 transition-all focus:opacity-100 p-1.5 rounded-lg hover:bg-[#FEF2F2]"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                      {/* ··· Menu */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setOpenMenuId(openMenuId === task.id ? null : task.id)}
+                          className="p-1.5 rounded-xl border border-transparent text-[#CDD0E8] hover:border-[#E4E6F0] hover:bg-[#F7F8FC] hover:text-[#14142B] transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {openMenuId === task.id && (
+                          <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden">
+                            <div className="p-1.5 space-y-1">
+                              <button
+                                onClick={() => startEditing(task)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-[#14142B] hover:bg-[#EEF0FF] hover:text-[#6B5CE7] rounded-xl transition-colors"
+                              >
+                                <Pencil className="w-4 h-4" /> Edit
+                              </button>
+                              <button
+                                onClick={() => { deleteTask(task.id); setOpenMenuId(null); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-[#EF4444] hover:bg-[#FEF2F2] rounded-xl transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

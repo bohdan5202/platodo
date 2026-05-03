@@ -162,8 +162,8 @@ export const useTasks = () => {
     }
   };
 
-  // Update task fields (title, subject, deadline)
-  const updateTask = async (id: string, fields: { title?: string; subject?: string | null; deadline?: string | null }) => {
+  // Update task fields (title, subject, deadline, priority)
+  const updateTask = async (id: string, fields: { title?: string; subject?: string | null; deadline?: string | null; priority?: number }) => {
     const previousTasks = [...tasks];
     try {
       setTasks(prev => prev.map(t => t.id === id ? { ...t, ...fields } : t));
