@@ -64,4 +64,19 @@ router.post('/login', async (req, res) => {
     }
 });
 
+router.get('/me', require('../middleware/auth'), async (req, res) => {
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('id', sql.UniqueIdentifier, req.user.id)
+            .query('SELECT id, email, name, morning_briefing FROM users WHERE id = @id');
+
+        if (result.recordset.length === 0) return res.status(404).json({ error: 'User not found' });
+        res.json(result.recordset[0]);
+    } catch (e) {
+        console.error('Me error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 module.exports = router;

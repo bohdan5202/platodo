@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTasks, Task } from '../../hooks/useTasks';
-import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X } from 'lucide-react';
+import { useUser } from '../../hooks/useUser';
+import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X, Sun } from 'lucide-react';
 import { format, parseISO, isToday, isThisWeek } from 'date-fns';
 
 const PRIORITIES = [
@@ -15,6 +16,7 @@ const PRIORITIES = [
 
 export default function DashboardPage() {
   const { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTask } = useTasks();
+  const { displayName, user } = useUser();
   const [newTaskText, setNewTaskText] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -73,10 +75,23 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-[#14142B] tracking-tight">Good morning, Bohdan 👋</h1>
+          <h1 className="text-3xl font-bold text-[#14142B] tracking-tight">Good morning, {displayName} 👋</h1>
           <p className="text-[#8888AA] mt-1.5 font-medium">{format(new Date(), 'EEEE, MMMM d')}</p>
         </div>
       </div>
+
+      {/* Morning Briefing Banner */}
+      {user?.morning_briefing && (
+        <div className="bg-gradient-to-r from-[#FEF3C7] to-[#FFF7ED] border border-[#FDE68A] rounded-2xl p-4 flex gap-3 mb-6 items-start">
+          <div className="flex-shrink-0 w-9 h-9 bg-[#F59E0B] rounded-xl flex items-center justify-center">
+            <Sun className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider mb-1">Morning Briefing</p>
+            <p className="text-[#14142B] text-sm font-medium leading-relaxed">{user.morning_briefing}</p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#EF4444] px-4 py-3 rounded-xl flex items-center gap-3 mb-6 text-sm font-medium">
