@@ -27,16 +27,18 @@ async function checkDeadlineConflicts(userId) {
             `);
 
         for (const conflict of conflictResult.recordset) {
-            // Check if we already generated an alert for this day recently (last 24h) to avoid spam
+            const dayIso = new Date(conflict.day).toISOString().split('T')[0];
+
+            // Reliable dedup: check if a conflict alert for this exact day was already saved today
             const existing = await pool.request()
                 .input('user_id', sql.UniqueIdentifier, userId)
-                .input('day', sql.Date, conflict.day)
+                .input('day_prefix', sql.NVarChar, `[${dayIso}]`)
                 .query(`
                     SELECT COUNT(*) as cnt FROM alerts
                     WHERE user_id = @user_id
                       AND type = 'conflict'
                       AND CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
-                      AND message LIKE '%' + CONVERT(varchar, @day, 23) + '%'
+                      AND message LIKE @day_prefix + '%'
                 `);
 
             if (existing.recordset[0].cnt > 0) continue; // skip duplicate alerts
@@ -56,10 +58,13 @@ async function checkDeadlineConflicts(userId) {
             const tasks = tasksResult.recordset;
             const plan = await replanConflict(tasks, conflict.day);
 
+            // Prefix message with [YYYY-MM-DD] so dedup check works reliably
+            const message = `[${dayIso}] ${plan}`;
+
             // Save alert to DB
             await pool.request()
                 .input('user_id', sql.UniqueIdentifier, userId)
-                .input('message', sql.NVarChar, plan)
+                .input('message', sql.NVarChar, message)
                 .input('type', sql.NVarChar, 'conflict')
                 .query(`INSERT INTO alerts (user_id, message, type) VALUES (@user_id, @message, @type)`);
 
@@ -69,7 +74,9 @@ async function checkDeadlineConflicts(userId) {
                 .query('SELECT fcm_token FROM users WHERE id = @user_id');
             const fcmToken = userResult.recordset[0]?.fcm_token;
             if (fcmToken) {
-                const dayStr = new Date(conflict.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                // Parse dayIso (YYYY-MM-DD) safely without timezone shift
+                const [year, month, day] = dayIso.split('-').map(Number);
+                const dayStr = new Date(year, month - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 await sendPush(fcmToken, `⚠️ Deadline conflict on ${dayStr}`, plan).catch(
                     err => console.error('[Thread 2] FCM push failed:', err.message)
                 );

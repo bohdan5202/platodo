@@ -28,8 +28,9 @@ export const useUser = () => {
     fetchUser();
   }, [fetchUser]);
 
-  // Derive a display name: prefer name, fall back to email prefix
-  const displayName = user?.name || user?.email?.split('@')[0] || 'there';
+  // Derive a display name: prefer full name, fall back to capitalised email prefix
+  const rawPrefix = user?.email?.split('@')[0]?.split('.')[0] ?? 'there';
+  const displayName = user?.name || (rawPrefix.charAt(0).toUpperCase() + rawPrefix.slice(1));
 
   return { user, isLoading, displayName };
 };
