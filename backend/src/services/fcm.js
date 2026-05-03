@@ -1,14 +1,24 @@
 const admin = require('firebase-admin');
 const path = require('path');
 
-// Вказуємо шлях до твого JSON-файлу
-const serviceAccount = require(path.join(__dirname, 'firebase-service-account.json'));
-
-// Ініціалізуємо Firebase лише один раз
 if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
+    try {
+        const credentialsString = process.env.FIREBASE_CREDENTIALS;
+
+        if (!credentialsString) {
+            throw new Error("FIREBASE_CREDENTIALS not found environment variables");
+        }
+
+        const serviceAccount = JSON.parse(credentialsString);
+
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+
+        console.log("Firebase successfully initialized!");
+    } catch (error) {
+        console.error("Error initializing Firebase:", error);
+    }
 }
 
 async function sendPush(fcmToken, title, body) {
