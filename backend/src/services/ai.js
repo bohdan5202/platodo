@@ -54,4 +54,45 @@ async function replanConflict(tasks, date) {
     return response.choices[0].message.content;
 }
 
-module.exports = { parseTask, generateBriefing, replanConflict };
+async function assignPlannedDate(task, existingSchedule) {
+    const today = new Date().toISOString().split('T')[0];
+    const deadline = task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : null;
+
+    // Build a summary of how many tasks are planned per day
+    const loadMap = {};
+    for (const t of existingSchedule) {
+        if (t.planned_date) {
+            const day = new Date(t.planned_date).toISOString().split('T')[0];
+            loadMap[day] = (loadMap[day] || 0) + 1;
+        }
+    }
+
+    const response = await client.chat.completions.create({
+        messages: [
+            {
+                role: 'system',
+                content: `You are a smart student planner assistant.
+Today is ${today}.
+The student has a new task to schedule. Pick the best day to work on it before its deadline.
+Rules:
+- The date must be between today (${today}) and the deadline (${deadline || 'no deadline, use week'}).
+- Prefer days with fewer tasks already planned (lighter load).
+- If the deadline is today or null, return today's date.
+- Return ONLY a single ISO8601 date string (YYYY-MM-DD). No explanation, no extra text.`
+            },
+            {
+                role: 'user',
+                content: JSON.stringify({ task: { title: task.title, priority: task.priority, deadline }, dailyLoad: loadMap })
+            }
+        ],
+        max_tokens: 20
+    });
+
+    const dateStr = response.choices[0].message.content.trim();
+    // Validate that the response is a proper date
+    const parsed = new Date(dateStr);
+    if (isNaN(parsed.getTime())) return new Date(); // fallback to today
+    return parsed;
+}
+
+module.exports = { parseTask, generateBriefing, replanConflict, assignPlannedDate };

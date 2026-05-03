@@ -141,5 +141,22 @@ export const useTasks = () => {
     }
   };
 
-  return { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, fetchTasks };
+  // Update planned date function
+  const updateTaskDate = async (id: string, newDate: string | null) => {
+    // Keep a reference to the previous state to revert if needed
+    const previousTasks = [...tasks];
+    try {
+      // Optimistic update
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, planned_date: newDate } : t));
+
+      await api.put(`/tasks/${id}`, { planned_date: newDate });
+    } catch (err) {
+      console.error('Failed to update task date', err);
+      // Revert optimistic update on failure
+      setTasks(previousTasks);
+      setError('Failed to update task date');
+    }
+  };
+
+  return { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTaskDate, fetchTasks };
 };

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getPool, sql } = require('../db');
 const { parseTask } = require('../services/ai');
+const { plannerSync } = require('../services/planner');
 const authenticate = require('../middleware/auth');
 
 router.post('/', authenticate, async (req, res) => {
@@ -18,6 +19,7 @@ router.post('/', authenticate, async (req, res) => {
 
     setImmediate(async () => {
         try {
+            // Thread 1: parse task with AI
             const parsed = await parseTask(req.body.text);
             await pool.request()
                 .input('id', sql.UniqueIdentifier, id)
@@ -26,6 +28,9 @@ router.post('/', authenticate, async (req, res) => {
                 .input('deadline', sql.DateTime2, parsed.deadline ? new Date(parsed.deadline) : null)
                 .input('priority', sql.Int, parsed.priority)
                 .query('UPDATE tasks SET title=@title,subject=@subject,deadline=@deadline,priority=@priority WHERE id=@id');
+
+            // Thread 3: assign planned_date based on workload and deadline
+            plannerSync(id, req.user.id);
         } catch (e) { console.error('AI parse failed:', e.message); }
     });
 });
@@ -33,13 +38,25 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const pool = await getPool();
-        const { is_done } = req.body;
+        const { is_done, planned_date } = req.body;
         
-        await pool.request()
+        const request = pool.request()
             .input('id', sql.UniqueIdentifier, req.params.id)
-            .input('user_id', sql.UniqueIdentifier, req.user.id)
-            .input('is_done', sql.Bit, is_done)
-            .query('UPDATE tasks SET is_done=@is_done WHERE id=@id AND user_id=@user_id');
+            .input('user_id', sql.UniqueIdentifier, req.user.id);
+
+        let updates = [];
+        if (is_done !== undefined) {
+            updates.push('is_done=@is_done');
+            request.input('is_done', sql.Bit, is_done);
+        }
+        if (planned_date !== undefined) {
+            updates.push('planned_date=@planned_date');
+            request.input('planned_date', sql.DateTime2, planned_date ? new Date(planned_date) : null);
+        }
+
+        if (updates.length > 0) {
+            await request.query(`UPDATE tasks SET ${updates.join(', ')} WHERE id=@id AND user_id=@user_id`);
+        }
             
         res.json({ success: true });
     } catch (err) {
