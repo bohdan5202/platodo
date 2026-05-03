@@ -31,4 +31,31 @@ router.get('/alerts', authenticate, async (req, res) => {
     }
 });
 
+router.delete('/alerts/:id', authenticate, async (req, res) => {
+    try {
+        const pool = await getPool();
+        await pool.request()
+            .input('id', sql.UniqueIdentifier, req.params.id)
+            .input('user_id', sql.UniqueIdentifier, req.user.id)
+            .query('DELETE FROM alerts WHERE id = @id AND user_id = @user_id');
+        res.json({ success: true });
+    } catch (e) {
+        console.error('Delete alert error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.delete('/alerts', authenticate, async (req, res) => {
+    try {
+        const pool = await getPool();
+        await pool.request()
+            .input('user_id', sql.UniqueIdentifier, req.user.id)
+            .query('DELETE FROM alerts WHERE user_id = @user_id');
+        res.json({ success: true });
+    } catch (e) {
+        console.error('Clear all alerts error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 module.exports = router;
