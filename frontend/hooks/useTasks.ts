@@ -162,5 +162,18 @@ export const useTasks = () => {
     }
   };
 
-  return { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTaskDate, fetchTasks };
+  // Update task fields (title, subject, deadline)
+  const updateTask = async (id: string, fields: { title?: string; subject?: string | null; deadline?: string | null }) => {
+    const previousTasks = [...tasks];
+    try {
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, ...fields } : t));
+      await api.put(`/tasks/${id}`, fields);
+    } catch (err) {
+      console.error('Failed to update task', err);
+      setTasks(previousTasks);
+      setError('Failed to update task');
+    }
+  };
+
+  return { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTaskDate, updateTask, fetchTasks };
 };
