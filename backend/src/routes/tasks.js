@@ -3,6 +3,7 @@ const router = express.Router();
 const { getPool, sql } = require('../db');
 const { parseTask } = require('../services/ai');
 const { plannerSync } = require('../services/planner');
+const { checkDeadlineConflicts } = require('../services/deadlineWatcher');
 const authenticate = require('../middleware/auth');
 
 router.post('/', authenticate, async (req, res) => {
@@ -31,6 +32,9 @@ router.post('/', authenticate, async (req, res) => {
 
             // Thread 3: assign planned_date based on workload and deadline
             plannerSync(id, req.user.id);
+
+            // Thread 2: check if this new deadline creates a conflict day
+            if (parsed.deadline) checkDeadlineConflicts(req.user.id);
         } catch (e) { console.error('AI parse failed:', e.message); }
     });
 });
@@ -75,6 +79,11 @@ router.put('/:id', authenticate, async (req, res) => {
         }
             
         res.json({ success: true });
+
+        // Thread 2: re-check conflicts when deadline changes
+        if (deadline !== undefined) {
+            setImmediate(() => checkDeadlineConflicts(req.user.id));
+        }
     } catch (err) {
         console.error('Update task failed:', err);
         res.status(500).json({ error: 'Server error' });
