@@ -22,7 +22,7 @@ export const useTasks = () => {
   // Function to fetch tasks
   const fetchTasks = useCallback(async () => {
     try {
-      const response = await api.get<Task[]>('/tasks');
+      const response = await api.get<Task[]>('/planner');
       setTasks(response.data);
       setError(null);
       return response.data;
@@ -39,41 +39,44 @@ export const useTasks = () => {
   }, [fetchTasks]);
 
   // Polling logic
-  const checkAndPoll = useCallback((currentTasks: Task[]) => {
-    // Check if any task is still unparsed (assuming title being null means unparsed)
-    const hasUnparsedTasks = currentTasks.some(task => task.title === null);
+  const pollRef = useRef<boolean>(false);
 
-    if (hasUnparsedTasks && !pollingRef.current) {
-      // Start polling
-      pollingRef.current = setInterval(async () => {
-        const updatedTasks = await fetchTasks();
-        if (updatedTasks) {
-          const stillHasUnparsed = updatedTasks.some(task => task.title === null);
-          if (!stillHasUnparsed && pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
+  const startPolling = useCallback(async () => {
+    if (pollRef.current) return;
+    pollRef.current = true;
+
+    const poll = async () => {
+      if (!pollRef.current) return;
+
+      const updatedTasks = await fetchTasks();
+      if (updatedTasks) {
+        const hasUnparsedTasks = updatedTasks.some(task => task.title === null);
+        if (hasUnparsedTasks) {
+          setTimeout(poll, 3000);
+        } else {
+          pollRef.current = false;
         }
-      }, 3000);
-    } else if (!hasUnparsedTasks && pollingRef.current) {
-      // Stop polling if everything is parsed
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
+      } else {
+        // Stop polling on error
+        pollRef.current = false;
+      }
+    };
+
+    setTimeout(poll, 3000);
   }, [fetchTasks]);
 
   // Trigger polling check whenever tasks change
   useEffect(() => {
-    checkAndPoll(tasks);
-    
+    const hasUnparsedTasks = tasks.some(task => task.title === null);
+    if (hasUnparsedTasks && !pollRef.current) {
+      startPolling();
+    }
+
     // Cleanup on unmount
     return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
+      pollRef.current = false;
     };
-  }, [tasks, checkAndPoll]);
+  }, [tasks, startPolling]);
 
   // Add task function
   const addTask = async (text: string) => {
@@ -90,14 +93,14 @@ export const useTasks = () => {
         planned_date: null,
         is_done: false,
       };
-      
+
       setTasks(prev => [tempTask, ...prev]);
 
       const response = await api.post<{ id: string, raw_input: string }>('/tasks', { text });
-      
+
       // Update temp task with real ID from backend to allow polling to match it
       setTasks(prev => prev.map(t => t.id === tempId ? { ...t, id: response.data.id } : t));
-      
+
     } catch (err) {
       console.error('Failed to add task', err);
       // Revert optimistic update on failure
@@ -111,7 +114,7 @@ export const useTasks = () => {
     try {
       // Optimistic update
       setTasks(prev => prev.map(t => t.id === id ? { ...t, is_done: !currentStatus } : t));
-      
+
       await api.put(`/tasks/${id}`, { is_done: !currentStatus });
     } catch (err) {
       console.error('Failed to update task', err);
@@ -121,5 +124,22 @@ export const useTasks = () => {
     }
   };
 
-  return { tasks, isLoading, error, addTask, toggleTaskDone, fetchTasks };
+  // Delete task function
+  const deleteTask = async (id: string) => {
+    // Keep a reference to the previous state to revert if needed
+    const previousTasks = [...tasks];
+    try {
+      // Optimistic update
+      setTasks(prev => prev.filter(t => t.id !== id));
+
+      await api.delete(`/tasks/${id}`);
+    } catch (err) {
+      console.error('Failed to delete task', err);
+      // Revert optimistic update on failure
+      setTasks(previousTasks);
+      setError('Failed to delete task');
+    }
+  };
+
+  return { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, fetchTasks };
 };

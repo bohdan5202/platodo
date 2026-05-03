@@ -30,4 +30,38 @@ router.post('/', authenticate, async (req, res) => {
     });
 });
 
+router.put('/:id', authenticate, async (req, res) => {
+    try {
+        const pool = await getPool();
+        const { is_done } = req.body;
+        
+        await pool.request()
+            .input('id', sql.UniqueIdentifier, req.params.id)
+            .input('user_id', sql.UniqueIdentifier, req.user.id)
+            .input('is_done', sql.Bit, is_done)
+            .query('UPDATE tasks SET is_done=@is_done WHERE id=@id AND user_id=@user_id');
+            
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Update task failed:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+router.delete('/:id', authenticate, async (req, res) => {
+    try {
+        const pool = await getPool();
+        
+        await pool.request()
+            .input('id', sql.UniqueIdentifier, req.params.id)
+            .input('user_id', sql.UniqueIdentifier, req.user.id)
+            .query('DELETE FROM tasks WHERE id=@id AND user_id=@user_id');
+            
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Delete task failed:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;
