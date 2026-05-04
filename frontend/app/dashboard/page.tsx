@@ -3,20 +3,24 @@
 import { useState } from 'react';
 import { useTasks, Task } from '../../hooks/useTasks';
 import { useUser } from '../../hooks/useUser';
-import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X, Sun } from 'lucide-react';
+import { useAlerts } from '../../hooks/useAlerts';
+import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X, Sun, Bell, ArrowRight } from 'lucide-react';
 import { format, parseISO, isToday, isThisWeek } from 'date-fns';
+import Link from 'next/link';
 
 const PRIORITIES = [
   { value: 5, label: 'P5 — Critical', color: 'text-[#EF4444]', bg: 'bg-[#FEE2E2]' },
-  { value: 4, label: 'P4 — High',     color: 'text-[#F59E0B]', bg: 'bg-[#FEF3C7]' },
-  { value: 3, label: 'P3 — Medium',   color: 'text-[#6B5CE7]', bg: 'bg-[#EEF0FF]' },
-  { value: 2, label: 'P2 — Low',      color: 'text-[#0EA5A0]', bg: 'bg-[#E0F7F6]' },
-  { value: 1, label: 'P1 — Minimal',  color: 'text-[#8888AA]', bg: 'bg-[#F7F8FC]' },
+  { value: 4, label: 'P4 — High', color: 'text-[#F59E0B]', bg: 'bg-[#FEF3C7]' },
+  { value: 3, label: 'P3 — Medium', color: 'text-[#6B5CE7]', bg: 'bg-[#EEF0FF]' },
+  { value: 2, label: 'P2 — Low', color: 'text-[#0EA5A0]', bg: 'bg-[#E0F7F6]' },
+  { value: 1, label: 'P1 — Minimal', color: 'text-[#8888AA]', bg: 'bg-[#F7F8FC]' },
 ];
 
 export default function DashboardPage() {
   const { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTask } = useTasks();
   const { displayName, user, updateName } = useUser();
+  const { alerts } = useAlerts();
+  const [alertsBannerHidden, setAlertsBannerHidden] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -100,21 +104,51 @@ export default function DashboardPage() {
             ) : (
               displayName
                 ? <span className="flex items-center gap-1.5 group">
-                    {displayName} 👋
-                    <button
-                      onClick={() => { setNameInput(user?.name || ''); setEditingName(true); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-[#EEF0FF] text-[#8888AA] hover:text-[#6B5CE7]"
-                      title="Edit name"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  </span>
+                  {displayName} 👋
+                  <button
+                    onClick={() => { setNameInput(user?.name || ''); setEditingName(true); }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-[#EEF0FF] text-[#8888AA] hover:text-[#6B5CE7]"
+                    title="Edit name"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </span>
                 : <span className="inline-block w-32 h-8 bg-[#E4E6F0] rounded-lg animate-pulse align-middle" />
             )}
           </h1>
           <p className="text-[#8888AA] mt-1.5 font-medium">{format(new Date(), 'EEEE, MMMM d')}</p>
         </div>
       </div>
+      {/* Alerts Warning Banner */}
+      {alerts.length > 0 && !alertsBannerHidden && (
+        <div className="bg-gradient-to-r from-[#FEF2F2] to-[#FFF5F5] border border-[#FCA5A5] rounded-2xl p-4 flex gap-3 mb-6 items-center">
+          <div className="flex-shrink-0 w-9 h-9 bg-[#EF4444] rounded-xl flex items-center justify-center">
+            <Bell className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-[#EF4444] uppercase tracking-wider mb-0.5">New Alerts</p>
+            <p className="text-[#14142B] text-sm font-medium">
+              You have <span className="font-bold text-[#EF4444]">{alerts.length}</span> unread alert{alerts.length > 1 ? 's' : ''} — {alerts.filter(a => a.type === 'conflict').length > 0 ? 'deadline conflict detected!' : 'check your alerts.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/alerts"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#EF4444] text-white text-xs font-semibold rounded-xl hover:bg-[#dc2626] transition-colors"
+            >
+              View <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              onClick={() => setAlertsBannerHidden(true)}
+              className="px-3 py-1.5 border border-[#FCA5A5] text-[#EF4444] text-xs font-semibold rounded-xl hover:bg-[#FEF2F2] transition-colors"
+            >
+              Hide
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Morning Briefing Banner */}
       {user?.morning_briefing && (
@@ -128,6 +162,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
 
       {error && (
         <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#EF4444] px-4 py-3 rounded-xl flex items-center gap-3 mb-6 text-sm font-medium">

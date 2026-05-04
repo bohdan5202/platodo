@@ -4,14 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Calendar, Bell, LogOut, CheckSquare } from 'lucide-react';
 import { removeToken } from '../utils/auth';
+import { useAlerts } from '../hooks/useAlerts';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const { alerts } = useAlerts();
+  const hasUnread = alerts.length > 0;
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Planner', href: '/planner', icon: Calendar },
-    { name: 'Alerts', href: '/alerts', icon: Bell },
+    { name: 'Alerts', href: '/alerts', icon: Bell, badge: hasUnread },
   ];
 
   const handleLogout = () => {
@@ -32,19 +35,31 @@ const Sidebar = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
-          
+
           return (
             <Link
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                isActive 
-                  ? 'bg-[#F7F8FC] text-[#6B5CE7] font-semibold' 
+                isActive
+                  ? 'bg-[#F7F8FC] text-[#6B5CE7] font-semibold'
                   : 'text-[#4A4A6A] hover:bg-[#F7F8FC] hover:text-[#14142B]'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-[#6B5CE7]' : 'text-[#8888AA]'}`} />
+              {/* Icon with optional red dot */}
+              <span className="relative flex-shrink-0">
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[#6B5CE7]' : 'text-[#8888AA]'}`} />
+                {item.badge && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#EF4444] rounded-full border-2 border-white" />
+                )}
+              </span>
               {item.name}
+              {/* Count badge next to text */}
+              {item.badge && (
+                <span className="ml-auto bg-[#EF4444] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  {alerts.length}
+                </span>
+              )}
             </Link>
           );
         })}

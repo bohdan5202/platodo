@@ -21,7 +21,7 @@ async function checkDeadlineConflicts(userId) {
                 FROM tasks
                 WHERE user_id = @user_id
                   AND is_done = 0
-                  AND deadline > GETDATE()
+                  AND CAST(deadline AS DATE) >= CAST(GETDATE() AS DATE)
                 GROUP BY CAST(deadline AS DATE)
                 HAVING COUNT(*) >= 3
             `);
