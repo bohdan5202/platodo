@@ -9,7 +9,8 @@ import { useAlerts } from '../hooks/useAlerts';
 const Sidebar = () => {
   const pathname = usePathname();
   const { alerts } = useAlerts();
-  const hasUnread = alerts.length > 0;
+  const unreadAlerts = alerts.filter(a => !a.is_read);
+  const hasUnread = unreadAlerts.length > 0;
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -57,7 +58,7 @@ const Sidebar = () => {
               {/* Count badge next to text */}
               {item.badge && (
                 <span className="ml-auto bg-[#EF4444] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                  {alerts.length}
+                  {unreadAlerts.length}
                 </span>
               )}
             </Link>

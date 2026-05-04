@@ -19,7 +19,10 @@ const PRIORITIES = [
 export default function DashboardPage() {
   const { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTask } = useTasks();
   const { displayName, user, updateName } = useUser();
-  const { alerts } = useAlerts();
+  const { alerts, markAllAsRead } = useAlerts();
+  const unreadAlerts = alerts.filter(a => !a.is_read);
+  const unreadConflicts = unreadAlerts.filter(a => a.type !== 'morning_briefing');
+  const unreadBriefings = unreadAlerts.filter(a => a.type === 'morning_briefing');
   const [alertsBannerHidden, setAlertsBannerHidden] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -77,13 +80,18 @@ export default function DashboardPage() {
   const dueThisWeek = tasks.filter(t => t.deadline && isThisWeek(parseISO(t.deadline)) && !t.is_done).length;
   const completedTasks = tasks.filter(t => t.is_done).length;
 
+  const hour = new Date().getHours();
+  let greetingText = 'Good evening';
+  if (hour >= 5 && hour < 12) greetingText = 'Good morning';
+  else if (hour >= 12 && hour < 17) greetingText = 'Good afternoon';
+
   return (
     <div className="max-w-4xl mx-auto pb-12" onClick={() => { setOpenMenuId(null); }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-[#14142B] tracking-tight flex items-center gap-2 flex-wrap">
-            Good morning,{' '}
+            {greetingText},{' '}
             {editingName ? (
               <span className="flex items-center gap-2">
                 <input
@@ -120,7 +128,7 @@ export default function DashboardPage() {
         </div>
       </div>
       {/* Alerts Warning Banner */}
-      {alerts.length > 0 && !alertsBannerHidden && (
+      {unreadConflicts.length > 0 && !alertsBannerHidden && (
         <div className="bg-gradient-to-r from-[#FEF2F2] to-[#FFF5F5] border border-[#FCA5A5] rounded-2xl p-4 flex gap-3 mb-6 items-center">
           <div className="flex-shrink-0 w-9 h-9 bg-[#EF4444] rounded-xl flex items-center justify-center">
             <Bell className="w-5 h-5 text-white" />
@@ -128,7 +136,7 @@ export default function DashboardPage() {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-[#EF4444] uppercase tracking-wider mb-0.5">New Alerts</p>
             <p className="text-[#14142B] text-sm font-medium">
-              You have <span className="font-bold text-[#EF4444]">{alerts.length}</span> unread alert{alerts.length > 1 ? 's' : ''} — {alerts.filter(a => a.type === 'conflict').length > 0 ? 'deadline conflict detected!' : 'check your alerts.'}
+              You have <span className="font-bold text-[#EF4444]">{unreadConflicts.length}</span> unread alert{unreadConflicts.length > 1 ? 's' : ''} — deadline conflict detected!
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -139,7 +147,10 @@ export default function DashboardPage() {
               View <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <button
-              onClick={() => setAlertsBannerHidden(true)}
+              onClick={() => {
+                setAlertsBannerHidden(true);
+                markAllAsRead();
+              }}
               className="px-3 py-1.5 border border-[#FCA5A5] text-[#EF4444] text-xs font-semibold rounded-xl hover:bg-[#FEF2F2] transition-colors"
             >
               Hide
@@ -151,14 +162,24 @@ export default function DashboardPage() {
 
 
       {/* Morning Briefing Banner */}
-      {user?.morning_briefing && (
-        <div className="bg-gradient-to-r from-[#FEF3C7] to-[#FFF7ED] border border-[#FDE68A] rounded-2xl p-4 flex gap-3 mb-6 items-start">
+      {unreadBriefings.length > 0 && (
+        <div className="bg-gradient-to-r from-[#FEF3C7] to-[#FFF7ED] border border-[#FDE68A] rounded-2xl p-4 flex gap-3 mb-6 items-center">
           <div className="flex-shrink-0 w-9 h-9 bg-[#F59E0B] rounded-xl flex items-center justify-center">
             <Sun className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider mb-1">Morning Briefing</p>
-            <p className="text-[#14142B] text-sm font-medium leading-relaxed">{user.morning_briefing}</p>
+            <p className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider mb-1">New Morning Briefing</p>
+            <p className="text-[#14142B] text-sm font-medium leading-relaxed line-clamp-2">
+              {unreadBriefings[0].message}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/alerts"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F59E0B] text-white text-xs font-semibold rounded-xl hover:bg-[#d97706] transition-colors"
+            >
+              Read <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       )}

@@ -6,6 +6,7 @@ export interface Alert {
   user_id: string;
   message: string;
   type: string | null;
+  is_read: boolean;
   created_at: string;
 }
 
@@ -28,16 +29,22 @@ export const useAlerts = () => {
 
   useEffect(() => {
     fetchAlerts().finally(() => setIsLoading(false));
+
+    // Poll for new alerts every 5 seconds
+    const interval = setInterval(() => {
+      fetchAlerts();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [fetchAlerts]);
 
   const dismissAlert = async (id: string) => {
-    // Optimistic update
     setAlerts(prev => prev.filter(a => a.id !== id));
     try {
       await api.delete(`/planner/alerts/${id}`);
     } catch (err) {
       console.error('Failed to dismiss alert', err);
-      fetchAlerts(); // revert by re-fetching
+      fetchAlerts(); 
     }
   };
 
@@ -52,5 +59,15 @@ export const useAlerts = () => {
     }
   };
 
-  return { alerts, isLoading, error, dismissAlert, clearAllAlerts, fetchAlerts };
+  const markAllAsRead = async () => {
+    setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
+    try {
+      await api.put('/planner/alerts/read');
+    } catch (err) {
+      console.error('Failed to mark all alerts as read', err);
+      fetchAlerts();
+    }
+  };
+
+  return { alerts, isLoading, error, dismissAlert, clearAllAlerts, markAllAsRead, fetchAlerts };
 };

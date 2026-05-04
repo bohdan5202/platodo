@@ -3,6 +3,7 @@
 import { useAlerts } from '../../hooks/useAlerts';
 import { Bell, BellOff, Trash2, RefreshCw, Loader2, AlertTriangle, Sun, Clock } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
+import { useEffect } from 'react';
 
 function getAlertStyle(type: string | null) {
   switch (type) {
@@ -36,7 +37,13 @@ function formatAlertDate(dateStr: string) {
 }
 
 export default function AlertsPage() {
-  const { alerts, isLoading, error, dismissAlert, clearAllAlerts, fetchAlerts } = useAlerts();
+  const { alerts, isLoading, error, dismissAlert, clearAllAlerts, fetchAlerts, markAllAsRead } = useAlerts();
+
+  useEffect(() => {
+    if (alerts.some(a => !a.is_read)) {
+      markAllAsRead();
+    }
+  }, [alerts, markAllAsRead]);
 
   if (isLoading) {
     return (
@@ -107,8 +114,11 @@ export default function AlertsPage() {
             return (
               <div
                 key={alert.id}
-                className={`bg-white rounded-[20px] border border-[#E4E6F0] border-l-4 ${style.border} shadow-sm hover:shadow-md transition-all p-5 flex gap-4`}
+                className={`bg-white rounded-[20px] border ${!alert.is_read ? 'border-[#6B5CE7]' : 'border-[#E4E6F0]'} border-l-4 ${style.border} shadow-sm hover:shadow-md transition-all p-5 flex gap-4 relative overflow-hidden`}
               >
+                {!alert.is_read && (
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#6B5CE7]/5 rounded-bl-[100px] pointer-events-none" />
+                )}
                 {/* Icon */}
                 <div className={`flex-shrink-0 w-10 h-10 ${style.iconBg} rounded-xl flex items-center justify-center`}>
                   <Icon className={`w-5 h-5 ${style.iconColor}`} />
@@ -123,9 +133,10 @@ export default function AlertsPage() {
                     <span className="text-[#8888AA] text-xs flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatAlertDate(alert.created_at)}
+                      {!alert.is_read && <span className="ml-1 text-[10px] font-bold text-[#6B5CE7] bg-[#EEF0FF] px-1.5 py-0.5 rounded-md">NEW</span>}
                     </span>
                   </div>
-                  <p className="text-[#14142B] text-sm leading-relaxed font-medium whitespace-pre-line">
+                  <p className={`text-sm leading-relaxed whitespace-pre-line ${!alert.is_read ? 'text-[#14142B] font-semibold' : 'text-[#4A4A6A] font-medium'}`}>
                     {alert.message}
                   </p>
                 </div>
@@ -148,7 +159,7 @@ export default function AlertsPage() {
       {alerts.length > 0 && (
         <div className="mt-8 flex items-center gap-2 text-xs text-[#8888AA] font-medium">
           <Bell className="w-3.5 h-3.5" />
-          <span>Alerts are generated automatically by AI — deadline watcher runs every 30 min, morning briefing at 8:00 AM.</span>
+          <span>Alerts are generated automatically by AI</span>
         </div>
       )}
     </div>
