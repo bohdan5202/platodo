@@ -30,6 +30,10 @@ jobs:
           cd backend
           npm install
           npm run build --if-present
+          
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm install
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -37,7 +41,6 @@ jobs:
           name: node-app
           path: |
               ./backend
-              !./backend/node_modules
 
   deploy:
     runs-on: ubuntu-latest
