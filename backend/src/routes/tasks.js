@@ -35,7 +35,19 @@ router.post('/', authenticate, async (req, res) => {
 
             // Thread 2: check if this new deadline creates a conflict day
             if (parsed.deadline) checkDeadlineConflicts(req.user.id);
-        } catch (e) { console.error('AI parse failed:', e.message); }
+        } catch (e) { 
+            console.error('AI parse failed:', e.message); 
+            try {
+                await pool.request()
+                    .input('id', sql.UniqueIdentifier, id)
+                    .input('title', sql.NVarChar, '⚠️ AI Parsing Failed')
+                    .input('subject', sql.NVarChar, 'Action Required')
+                    .input('priority', sql.Int, 5)
+                    .query('UPDATE tasks SET title=@title,subject=@subject,priority=@priority WHERE id=@id');
+            } catch(dbErr) {
+                console.error('Failed to update task error state', dbErr);
+            }
+        }
     });
 });
 

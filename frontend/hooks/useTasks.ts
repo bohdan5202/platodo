@@ -10,6 +10,7 @@ export interface Task {
   priority: number;
   planned_date: string | null;
   is_done: boolean;
+  created_at: string;
 }
 
 export const useTasks = () => {
@@ -96,6 +97,7 @@ export const useTasks = () => {
         priority: 1, // Default, will be updated by AI
         planned_date: null,
         is_done: false,
+        created_at: new Date().toISOString(),
       };
 
       setTasks(prev => [tempTask, ...prev]);
