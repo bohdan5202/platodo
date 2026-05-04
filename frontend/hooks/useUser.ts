@@ -28,9 +28,20 @@ export const useUser = () => {
     fetchUser();
   }, [fetchUser]);
 
-  // Derive a display name: prefer full name, fall back to capitalised email prefix
-  const rawPrefix = user?.email?.split('@')[0]?.split('.')[0] ?? 'there';
-  const displayName = user?.name || (rawPrefix.charAt(0).toUpperCase() + rawPrefix.slice(1));
+  const updateName = async (newName: string) => {
+    await api.put('/auth/me', { name: newName });
+    setUser(prev => prev ? { ...prev, name: newName } : prev);
+  };
 
-  return { user, isLoading, displayName };
+  // While still loading don't compute a name yet (avoids "Good morning, There 👋")
+  // After load: prefer name → capitalize email prefix → 'there'
+  const displayName = isLoading
+    ? null
+    : user?.name?.trim() ||
+      (user?.email
+        ? user.email.split('@')[0].split('.')[0].charAt(0).toUpperCase() +
+          user.email.split('@')[0].split('.')[0].slice(1)
+        : 'there');
+
+  return { user, isLoading, displayName, updateName };
 };

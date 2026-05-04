@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { CheckSquare, Mail, Lock, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { CheckSquare, Mail, Lock, User, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { setToken } from '../../utils/auth';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +31,7 @@ export default function RegisterPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await axios.post(`${apiUrl}/auth/register`, {
         email,
+        name,
         password,
       });
 
@@ -129,6 +131,23 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 bg-[#F7F8FC] border border-[#E4E6F0] rounded-xl text-[#14142B] placeholder-[#8888AA] focus:outline-none focus:border-[#6B5CE7] focus:ring-4 focus:ring-[#6B5CE7]/10 transition-all font-medium"
                     placeholder="student@university.edu"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-[#4A4A6A] ml-1">Your name</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-[#8888AA]" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 bg-[#F7F8FC] border border-[#E4E6F0] rounded-xl text-[#14142B] placeholder-[#8888AA] focus:outline-none focus:border-[#6B5CE7] focus:ring-4 focus:ring-[#6B5CE7]/10 transition-all font-medium"
+                    placeholder="John Doe"
                   />
                 </div>
               </div>

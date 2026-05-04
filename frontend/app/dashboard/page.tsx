@@ -16,11 +16,14 @@ const PRIORITIES = [
 
 export default function DashboardPage() {
   const { tasks, isLoading, error, addTask, toggleTaskDone, deleteTask, updateTask } = useTasks();
-  const { displayName, user } = useUser();
+  const { displayName, user, updateName } = useUser();
   const [newTaskText, setNewTaskText] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: '', subject: '', deadline: '', priority: 1 });
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +78,40 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-[#14142B] tracking-tight">Good morning, {displayName} 👋</h1>
+          <h1 className="text-3xl font-bold text-[#14142B] tracking-tight flex items-center gap-2 flex-wrap">
+            Good morning,{' '}
+            {editingName ? (
+              <span className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key === 'Enter') { setSavingName(true); await updateName(nameInput); setEditingName(false); setSavingName(false); }
+                    if (e.key === 'Escape') setEditingName(false);
+                  }}
+                  className="text-2xl font-bold border-b-2 border-[#6B5CE7] bg-transparent outline-none text-[#14142B] w-48"
+                />
+                <button onClick={async () => { setSavingName(true); await updateName(nameInput); setEditingName(false); setSavingName(false); }} className="text-[#10B981]">
+                  {savingName ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                </button>
+                <button onClick={() => setEditingName(false)} className="text-[#8888AA]"><X className="w-5 h-5" /></button>
+              </span>
+            ) : (
+              displayName
+                ? <span className="flex items-center gap-1.5 group">
+                    {displayName} 👋
+                    <button
+                      onClick={() => { setNameInput(user?.name || ''); setEditingName(true); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-[#EEF0FF] text-[#8888AA] hover:text-[#6B5CE7]"
+                      title="Edit name"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </span>
+                : <span className="inline-block w-32 h-8 bg-[#E4E6F0] rounded-lg animate-pulse align-middle" />
+            )}
+          </h1>
           <p className="text-[#8888AA] mt-1.5 font-medium">{format(new Date(), 'EEEE, MMMM d')}</p>
         </div>
       </div>

@@ -6,7 +6,7 @@ const { getPool, sql } = require('../db');
 
 router.post('/register', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, name } = req.body;
         if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
         const pool = await getPool();
@@ -24,7 +24,8 @@ router.post('/register', async (req, res) => {
             .input('id', sql.UniqueIdentifier, id)
             .input('email', sql.NVarChar, email)
             .input('password_hash', sql.NVarChar, hash)
-            .query('INSERT INTO users (id, email, password_hash) VALUES (@id, @email, @password_hash)');
+            .input('name', sql.NVarChar, name || null)
+            .query('INSERT INTO users (id, email, password_hash, name) VALUES (@id, @email, @password_hash, @name)');
 
         res.status(201).json({ message: 'User created' });
     } catch (e) {
@@ -75,6 +76,24 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
         res.json(result.recordset[0]);
     } catch (e) {
         console.error('Me error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.put('/me', require('../middleware/auth'), async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+
+        const pool = await getPool();
+        await pool.request()
+            .input('id', sql.UniqueIdentifier, req.user.id)
+            .input('name', sql.NVarChar, name.trim())
+            .query('UPDATE users SET name = @name WHERE id = @id');
+
+        res.json({ success: true, name: name.trim() });
+    } catch (e) {
+        console.error('Update me error:', e);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

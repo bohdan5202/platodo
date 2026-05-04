@@ -47,7 +47,7 @@ export default function LoginPage() {
         {/* Decorative elements */}
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#C4BEFA]/20 rounded-full blur-3xl"></div>
-        
+
         <div className="relative z-10 flex items-center gap-3">
           <div className="bg-white p-2.5 rounded-xl shadow-lg">
             <CheckSquare className="w-8 h-8 text-[#6B5CE7]" />
@@ -63,7 +63,7 @@ export default function LoginPage() {
           <p className="text-lg text-white/80 leading-relaxed font-medium">
             Join thousands of students organizing their academic life with AI-powered task parsing and intelligent scheduling.
           </p>
-          
+
           <div className="mt-12 flex items-center gap-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
             <div className="bg-white/20 p-3 rounded-full flex-shrink-0">
               <Sparkles className="w-6 h-6 text-white" />
@@ -151,11 +151,11 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-            
+
             <div className="pt-2">
               <p className="text-center text-sm font-medium text-[#8888AA]">
                 Don't have an account?{' '}
-                <a href="#" className="text-[#6B5CE7] hover:text-[#5a4cdb] font-semibold transition-colors">
+                <a href="/register" className="text-[#6B5CE7] hover:text-[#5a4cdb] font-semibold transition-colors">
                   Sign up
                 </a>
               </p>
