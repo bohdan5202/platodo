@@ -31,6 +31,20 @@ router.get('/alerts', authenticate, async (req, res) => {
     }
 });
 
+router.get('/alerts/history', authenticate, async (req, res) => {
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('user_id', sql.UniqueIdentifier, req.user.id)
+            .query('SELECT * FROM alerts WHERE user_id = @user_id ORDER BY created_at DESC');
+            
+        res.json(result.recordset);
+    } catch (e) {
+        console.error('Alerts history error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 router.delete('/alerts/:id', authenticate, async (req, res) => {
     try {
         const pool = await getPool();

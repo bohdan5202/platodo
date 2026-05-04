@@ -1,9 +1,9 @@
 "use client";
 
 import { useAlerts } from '../../hooks/useAlerts';
-import { Bell, BellOff, Trash2, RefreshCw, Loader2, AlertTriangle, Sun, Clock } from 'lucide-react';
-import { format, parseISO, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
-import { useEffect } from 'react';
+import { Bell, BellOff, Trash2, RefreshCw, Loader2, AlertTriangle, Sun, Clock, History } from 'lucide-react';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 function getAlertStyle(type: string | null) {
   switch (type) {
@@ -38,13 +38,19 @@ function formatAlertDate(dateStr: string) {
 }
 
 export default function AlertsPage() {
-  const { alerts, isLoading, error, dismissAlert, clearAllAlerts, fetchAlerts, markAllAsRead } = useAlerts();
+  const { alerts, historyAlerts, isLoading, error, dismissAlert, clearAllAlerts, fetchAlerts, fetchHistory, markAllAsRead } = useAlerts();
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
 
   useEffect(() => {
-    if (alerts.some(a => !a.is_read)) {
+    if (activeTab === 'active' && alerts.some(a => !a.is_read)) {
       markAllAsRead();
     }
-  }, [alerts, markAllAsRead]);
+    if (activeTab === 'history') {
+      fetchHistory();
+    }
+  }, [alerts, activeTab, markAllAsRead, fetchHistory]);
+
+  const displayAlerts = activeTab === 'active' ? alerts : historyAlerts;
 
   if (isLoading) {
     return (
@@ -64,20 +70,21 @@ export default function AlertsPage() {
         <div>
           <h1 className="text-3xl font-bold text-[#14142B] tracking-tight">Alerts</h1>
           <p className="text-[#8888AA] mt-1.5 font-medium">
-            {alerts.length > 0
-              ? `${alerts.length} notification${alerts.length > 1 ? 's' : ''} from your AI assistant`
-              : 'AI-generated alerts and briefings'}
+            {activeTab === 'active' 
+              ? (alerts.length > 0 ? `${alerts.length} notification${alerts.length > 1 ? 's' : ''} from your AI assistant` : 'AI-generated alerts and briefings')
+              : `${historyAlerts.length} past alert${historyAlerts.length !== 1 ? 's' : ''}`
+            }
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchAlerts}
+            onClick={activeTab === 'active' ? fetchAlerts : fetchHistory}
             className="p-2.5 rounded-xl border border-[#E4E6F0] text-[#8888AA] hover:bg-[#F7F8FC] hover:text-[#14142B] transition-colors"
             title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          {alerts.length > 0 && (
+          {activeTab === 'active' && alerts.length > 0 && (
             <button
               onClick={clearAllAlerts}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E4E6F0] text-sm font-medium text-[#EF4444] hover:bg-[#FEF2F2] hover:border-[#FCA5A5] transition-colors"
@@ -89,26 +96,44 @@ export default function AlertsPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-2 mb-6 border-b border-[#E4E6F0] pb-px">
+        <button
+          onClick={() => setActiveTab('active')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'active' ? 'border-[#6B5CE7] text-[#6B5CE7]' : 'border-transparent text-[#8888AA] hover:text-[#14142B]'}`}
+        >
+          Active Alerts
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'history' ? 'border-[#6B5CE7] text-[#6B5CE7]' : 'border-transparent text-[#8888AA] hover:text-[#14142B]'}`}
+        >
+          History
+        </button>
+      </div>
+
       {error && (
         <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#EF4444] px-4 py-3 rounded-xl mb-6 text-sm font-medium">
           {error}
         </div>
       )}
 
-      {alerts.length === 0 ? (
+      {displayAlerts.length === 0 ? (
         /* Empty State */
         <div className="text-center py-20 bg-white rounded-[24px] border border-[#E4E6F0] border-dashed">
           <div className="bg-[#EEF0FF] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5">
-            <BellOff className="w-10 h-10 text-[#6B5CE7]" />
+            {activeTab === 'active' ? <BellOff className="w-10 h-10 text-[#6B5CE7]" /> : <History className="w-10 h-10 text-[#6B5CE7]" />}
           </div>
-          <h3 className="text-[#14142B] font-bold text-xl mb-2">No alerts yet</h3>
+          <h3 className="text-[#14142B] font-bold text-xl mb-2">{activeTab === 'active' ? 'No alerts yet' : 'No history'}</h3>
           <p className="text-[#8888AA] font-medium text-sm max-w-xs mx-auto">
-            Alerts appear here when the AI detects deadline conflicts or sends your morning briefing.
+            {activeTab === 'active' 
+              ? 'Alerts appear here when the AI detects deadline conflicts or sends your morning briefing.'
+              : 'You have no past alerts or morning briefings yet.'}
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {alerts.map(alert => {
+          {displayAlerts.map(alert => {
             const style = getAlertStyle(alert.type);
             const Icon = style.icon;
 
@@ -143,13 +168,15 @@ export default function AlertsPage() {
                 </div>
 
                 {/* Dismiss button */}
-                <button
-                  onClick={() => dismissAlert(alert.id)}
-                  className="flex-shrink-0 p-1.5 rounded-lg text-[#CDD0E8] hover:text-[#EF4444] hover:bg-[#FEF2F2] transition-colors self-start"
-                  title="Dismiss"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {activeTab === 'active' && (
+                  <button
+                    onClick={() => dismissAlert(alert.id)}
+                    className="flex-shrink-0 p-1.5 rounded-lg text-[#CDD0E8] hover:text-[#EF4444] hover:bg-[#FEF2F2] transition-colors self-start"
+                    title="Dismiss"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             );
           })}

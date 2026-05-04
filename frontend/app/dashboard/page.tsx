@@ -115,7 +115,7 @@ export default function DashboardPage() {
   if (groupBy === 'none') {
     displaySections = [{ title: 'All Tasks', tasks: sortedTasks, color: "text-[#4A4A6A]", badge: "bg-[#E4E6F0]" }];
   } else if (groupBy === 'priority') {
-    const pGroups = (sortOrder === 'desc' ? [5, 4, 3, 2, 1] : [1, 2, 3, 4, 5]).map(pVal => {
+    const pGroups = (sortOrder === 'desc' ? [1, 2, 3, 4, 5] : [5, 4, 3, 2, 1]).map(pVal => {
       const pData = PRIORITIES.find(p => p.value === pVal);
       return {
         title: pData?.label || `Priority ${pVal}`,

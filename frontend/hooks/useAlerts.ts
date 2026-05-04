@@ -13,6 +13,7 @@ export interface Alert {
 export const useAlerts = () => {
   const api = useApi();
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [historyAlerts, setHistoryAlerts] = useState<Alert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +25,15 @@ export const useAlerts = () => {
     } catch (err) {
       setError('Failed to fetch alerts');
       console.error(err);
+    }
+  }, [api]);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      const response = await api.get<Alert[]>('/planner/alerts/history');
+      setHistoryAlerts(response.data);
+    } catch (err) {
+      console.error('Failed to fetch history', err);
     }
   }, [api]);
 
@@ -69,5 +79,15 @@ export const useAlerts = () => {
     }
   };
 
-  return { alerts, isLoading, error, dismissAlert, clearAllAlerts, markAllAsRead, fetchAlerts };
+  return {
+    alerts,
+    historyAlerts,
+    isLoading,
+    error,
+    dismissAlert,
+    clearAllAlerts,
+    fetchAlerts,
+    fetchHistory,
+    markAllAsRead
+  };
 };
