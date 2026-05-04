@@ -16,6 +16,7 @@ function getAlertStyle(type: string | null) {
         badge: 'bg-[#FEF3C7] text-[#F59E0B]',
         label: 'Morning Briefing',
       };
+    case 'alert':
     case 'conflict':
     default:
       return {

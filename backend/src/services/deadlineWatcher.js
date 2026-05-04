@@ -36,6 +36,7 @@ async function checkDeadlineConflicts(userId) {
                 .query(`
                     SELECT COUNT(*) as cnt FROM alerts
                     WHERE user_id = @user_id
+                      AND type = 'alert'
                       AND CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
                       AND message LIKE @day_prefix + '%'
                 `);
@@ -64,7 +65,8 @@ async function checkDeadlineConflicts(userId) {
             await pool.request()
                 .input('user_id', sql.UniqueIdentifier, userId)
                 .input('message', sql.NVarChar, message)
-                .query(`INSERT INTO alerts (user_id, message) VALUES (@user_id, @message)`);
+                .input('type', sql.NVarChar, 'alert')
+                .query(`INSERT INTO alerts (user_id, message, type) VALUES (@user_id, @message, @type)`);
 
             // Send push notification to phone if user has FCM token
             const userResult = await pool.request()
