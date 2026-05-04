@@ -26,7 +26,7 @@ const Sidebar = () => {
   return (
     <aside className="w-64 bg-white border-r border-[#E4E6F0] flex flex-col h-screen sticky top-0">
       <div className="p-6 flex items-center gap-3 border-b border-[#E4E6F0]">
-        <div className="bg-[#6B5CE7] p-2 rounded-xl">
+        <div className="bg-[#6B5CE7] p-2 rounded-full">
           <CheckSquare className="w-6 h-6 text-white" />
         </div>
         <h1 className="text-xl font-bold text-[#14142B]">Platodo</h1>

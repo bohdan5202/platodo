@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { useTasks, Task } from '../../hooks/useTasks';
-import { CheckCircle2, Circle, Calendar as CalendarIcon, Clock, Loader2, ChevronDown, MoreVertical, Pencil, Trash2, Check, X } from 'lucide-react';
+import { CheckCircle2, Circle, Calendar as CalendarIcon, Clock, Loader2, ChevronDown, MoreVertical, Pencil, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import { format, parseISO, isToday, isTomorrow, isPast, isAfter, endOfTomorrow, addDays } from 'date-fns';
 
 const PRIORITIES = [
   { value: 5, label: 'P5 — Critical', color: 'text-[#EF4444]', bg: 'bg-[#FEE2E2]' },
-  { value: 4, label: 'P4 — High',     color: 'text-[#F59E0B]', bg: 'bg-[#FEF3C7]' },
-  { value: 3, label: 'P3 — Medium',   color: 'text-[#6B5CE7]', bg: 'bg-[#EEF0FF]' },
-  { value: 2, label: 'P2 — Low',      color: 'text-[#0EA5A0]', bg: 'bg-[#E0F7F6]' },
-  { value: 1, label: 'P1 — Minimal',  color: 'text-[#8888AA]', bg: 'bg-[#F7F8FC]' },
+  { value: 4, label: 'P4 — High', color: 'text-[#F59E0B]', bg: 'bg-[#FEF3C7]' },
+  { value: 3, label: 'P3 — Medium', color: 'text-[#6B5CE7]', bg: 'bg-[#EEF0FF]' },
+  { value: 2, label: 'P2 — Low', color: 'text-[#0EA5A0]', bg: 'bg-[#E0F7F6]' },
+  { value: 1, label: 'P1 — Minimal', color: 'text-[#8888AA]', bg: 'bg-[#F7F8FC]' },
 ];
 
 export default function PlannerPage() {
@@ -103,19 +103,29 @@ export default function PlannerPage() {
     const isParsing = task.title === null;
     const isDeadlinePast = task.deadline && isPast(parseISO(task.deadline)) && !isToday(parseISO(task.deadline));
     const isEditing = editingId === task.id;
+    const isError = task.title === '⚠️ AI Parsing Failed';
 
     return (
       <div
         key={task.id}
-        className={`bg-white p-4 sm:p-5 rounded-[20px] border flex items-start gap-4 transition-all group relative ${task.is_done ? 'border-[#E4E6F0] opacity-60 bg-[#F7F8FC]' : 'border-[#E4E6F0] shadow-sm hover:border-[#C4BEFA] hover:shadow-md'}`}
+        className={`bg-white p-4 sm:p-5 rounded-[20px] border flex items-start gap-4 transition-all group relative ${
+          isError ? 'border-[#EF4444] bg-[#FEF2F2] shadow-sm' :
+          task.is_done ? 'border-[#E4E6F0] opacity-60 bg-[#F7F8FC]' : 'border-[#E4E6F0] shadow-sm hover:border-[#C4BEFA] hover:shadow-md'
+        }`}
       >
-        {/* Checkbox */}
-        <button
-          onClick={() => toggleTaskDone(task.id, task.is_done)}
-          className={`flex-shrink-0 mt-0.5 transition-colors active:scale-95 ${task.is_done ? 'text-[#10B981]' : 'text-[#CDD0E8] hover:text-[#6B5CE7]'}`}
-        >
-          {task.is_done ? <CheckCircle2 className="w-7 h-7" /> : <Circle className="w-7 h-7" />}
-        </button>
+        {/* Checkbox / Error Icon */}
+        {!isError ? (
+          <button
+            onClick={() => toggleTaskDone(task.id, task.is_done)}
+            className={`flex-shrink-0 mt-0.5 transition-colors active:scale-95 ${task.is_done ? 'text-[#10B981]' : 'text-[#CDD0E8] hover:text-[#6B5CE7]'}`}
+          >
+            {task.is_done ? <CheckCircle2 className="w-7 h-7" /> : <Circle className="w-7 h-7" />}
+          </button>
+        ) : (
+          <div className="flex-shrink-0 mt-0.5 text-[#EF4444]">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -158,11 +168,10 @@ export default function PlannerPage() {
                     key={p.value}
                     type="button"
                     onClick={() => setEditForm(f => ({ ...f, priority: p.value }))}
-                    className={`px-3 py-1 rounded-full text-[11px] font-bold border-2 transition-all ${
-                      editForm.priority === p.value
+                    className={`px-3 py-1 rounded-full text-[11px] font-bold border-2 transition-all ${editForm.priority === p.value
                         ? `${p.bg} ${p.color} border-current`
                         : 'bg-transparent text-[#8888AA] border-[#E4E6F0] hover:border-[#C4BEFA]'
-                    }`}
+                      }`}
                   >
                     P{p.value}
                   </button>
@@ -183,6 +192,16 @@ export default function PlannerPage() {
                 </button>
               </div>
             </div>
+          ) : isError ? (
+            /* ── Error View ── */
+            <div className="flex flex-col">
+              <span className="text-[15px] font-bold text-[#EF4444]">
+                {task.title}
+              </span>
+              <span className="text-xs font-medium text-[#EF4444]/80 mt-1">
+                We couldn't understand: <span className="italic">"{task.raw_input}"</span>. Please edit to set details manually.
+              </span>
+            </div>
           ) : (
             /* ── Normal View ── */
             <div className="flex flex-col">
@@ -199,6 +218,12 @@ export default function PlannerPage() {
                 {task.subject && (
                   <span className="bg-[#E0F7F6] text-[#0EA5A0] px-2.5 py-0.5 rounded-full font-semibold">
                     {task.subject}
+                  </span>
+                )}
+                {(task.deadline || task.subject) && task.created_at && <span className="text-[#E4E6F0]">•</span>}
+                {task.created_at && (
+                  <span className="text-[#8888AA]/70 font-medium">
+                    Added {format(parseISO(task.created_at), 'MMM d')}
                   </span>
                 )}
               </div>
