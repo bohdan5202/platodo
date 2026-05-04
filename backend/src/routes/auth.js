@@ -102,7 +102,12 @@ router.put('/me', require('../middleware/auth'), async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email) return res.status(400).json({ error: 'Email is required' });
+        console.log(`[Forgot Password] Request received for: ${email}`);
+        
+        if (!email) {
+            console.log(`[Forgot Password] No email provided.`);
+            return res.status(400).json({ error: 'Email is required' });
+        }
 
         const pool = await getPool();
         const checkUser = await pool.request()
@@ -110,11 +115,13 @@ router.post('/forgot-password', async (req, res) => {
             .query('SELECT id, name FROM users WHERE email = @email');
 
         if (checkUser.recordset.length === 0) {
+            console.log(`[Forgot Password] User not found: ${email}`);
             // Return success even if not found to prevent email enumeration
             return res.json({ success: true });
         }
 
         const user = checkUser.recordset[0];
+        console.log(`[Forgot Password] User found. Generating token...`);
         const token = require('crypto').randomBytes(32).toString('hex');
 
         // Store token in DB (expiry 1 hour)
@@ -122,12 +129,20 @@ router.post('/forgot-password', async (req, res) => {
             .input('id', sql.UniqueIdentifier, user.id)
             .input('reset_token', sql.NVarChar, token)
             .query(`UPDATE users SET reset_token = @reset_token, reset_token_expires = DATEADD(hour, 1, GETDATE()) WHERE id = @id`);
+        console.log(`[Forgot Password] Token stored in DB.`);
 
         // Send Email
+        if (!process.env.ACS_CONNECTION_STRING || !process.env.ACS_SENDER_EMAIL) {
+            console.error(`[Forgot Password] ERROR: ACS_CONNECTION_STRING or ACS_SENDER_EMAIL is missing in .env!`);
+            return res.status(500).json({ error: 'Server email configuration is missing.' });
+        }
+
+        console.log(`[Forgot Password] Initializing EmailClient...`);
         const emailClient = new EmailClient(process.env.ACS_CONNECTION_STRING);
         const resetLink = `http://localhost:3000/reset-password?token=${token}`;
         
-        await emailClient.beginSend({
+        console.log(`[Forgot Password] Sending email via ACS to ${email} from ${process.env.ACS_SENDER_EMAIL}...`);
+        const poller = await emailClient.beginSend({
             senderAddress: process.env.ACS_SENDER_EMAIL,
             content: {
                 subject: "Reset your Platodo password",
@@ -148,9 +163,13 @@ router.post('/forgot-password', async (req, res) => {
             }
         });
 
+        console.log(`[Forgot Password] Waiting for email to be sent...`);
+        const result = await poller.pollUntilDone();
+        console.log(`[Forgot Password] Email send result:`, result);
+
         res.json({ success: true });
     } catch (e) {
-        console.error('Forgot password error:', e);
+        console.error('[Forgot Password] FATAL ERROR:', e);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
