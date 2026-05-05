@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import AppLayout from "../components/AppLayout";
+import { Analytics } from "@vercel/analytics/next";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <AppLayout>
           {children}
         </AppLayout>
+        <Analytics />
       </body>
     </html>
   );
