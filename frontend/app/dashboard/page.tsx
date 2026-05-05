@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTasks, Task } from '../../hooks/useTasks';
 import { useUser } from '../../hooks/useUser';
 import { useAlerts } from '../../hooks/useAlerts';
-import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X, Sun, Bell, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, Sparkles, AlertCircle, Loader2, MoreVertical, Pencil, Trash2, Check, X, Sun, Bell, ArrowRight, BrainCircuit } from 'lucide-react';
 import { format, parseISO, isToday, isThisWeek, isTomorrow, isPast, isAfter, endOfTomorrow } from 'date-fns';
 import Link from 'next/link';
 
@@ -522,12 +522,38 @@ export default function DashboardPage() {
         </div>
 
         {tasks.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-[24px] border border-[#E4E6F0] border-dashed">
-            <div className="bg-[#F7F8FC] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8 text-[#CDD0E8]" />
+          <div className="bg-white rounded-[24px] border border-[#E4E6F0] border-dashed p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm">
+            <div className="bg-[#EEF0FF] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-[#6B5CE7]" />
             </div>
-            <h3 className="text-[#14142B] font-bold text-lg mb-1">You're all caught up!</h3>
-            <p className="text-[#8888AA] font-medium text-sm">Add a new task above to get started.</p>
+            <h3 className="text-[#14142B] font-extrabold text-2xl mb-3 tracking-tight">Welcome to Platodo!</h3>
+            <p className="text-[#8888AA] font-medium text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
+              It looks like you don't have any tasks yet. Here is a quick guide on how to get the most out of your AI assistant:
+            </p>
+            
+            <div className="grid sm:grid-cols-2 gap-4 text-left">
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0] hover:border-[#C4BEFA] transition-colors">
+                <div className="bg-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-[#6B5CE7] font-bold mb-3 border border-[#E4E6F0]">1</div>
+                <h4 className="font-bold text-[#14142B] mb-1">Type naturally</h4>
+                <p className="text-sm text-[#8888AA] leading-relaxed">Type <span className="text-[#4A4A6A] font-semibold">"Math exam on Friday at 2pm"</span> in the top bar. No need to fill out complex forms.</p>
+              </div>
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0] hover:border-[#C4BEFA] transition-colors">
+                <div className="bg-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-[#0EA5A0] font-bold mb-3 border border-[#E4E6F0]">
+                  <BrainCircuit className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-[#14142B] mb-1">AI does the rest</h4>
+                <p className="text-sm text-[#8888AA] leading-relaxed">We automatically extract the subject, deadline, and priority to organize everything for you.</p>
+              </div>
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0] sm:col-span-2 flex items-center gap-4 hover:border-[#C4BEFA] transition-colors">
+                <div className="bg-white w-10 h-10 flex-shrink-0 rounded-lg shadow-sm flex items-center justify-center text-[#F59E0B] border border-[#E4E6F0]">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#14142B] mb-0.5">Stay on track</h4>
+                  <p className="text-sm text-[#8888AA] leading-relaxed">Check your Alerts tab for intelligent deadline conflict warnings and daily morning briefings.</p>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-8">

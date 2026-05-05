@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { CheckSquare, Mail, Lock, User, ArrowRight, Loader2, Sparkles } from 'lucide-react';
-import { setToken } from '../../utils/auth';
+import { CheckSquare, Mail, Lock, User, ArrowRight, Loader2, Sparkles, Send, BrainCircuit, BellRing } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RegisterPage() {
@@ -15,6 +14,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,37 +29,93 @@ export default function RegisterPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await axios.post(`${apiUrl}/auth/register`, {
+      await axios.post(`${apiUrl}/auth/register`, {
         email,
         name,
         password,
       });
 
-      const token = response.data.access_token || response.data.token;
-      if (token) {
-        setToken(token);
-        router.push('/dashboard');
-      } else {
-        // Attempt to auto-login if token wasn't returned from register
-        try {
-          const loginRes = await axios.post(`${apiUrl}/auth/login`, { email, password });
-          const loginToken = loginRes.data.access_token || loginRes.data.token;
-          if (loginToken) {
-            setToken(loginToken);
-            router.push('/dashboard');
-          } else {
-            router.push('/login');
-          }
-        } catch (loginErr) {
-          router.push('/login');
-        }
-      }
+      setIsSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.error || err.response?.data?.detail || err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#F7F8FC]">
+        <div className="max-w-2xl w-full bg-white rounded-[32px] p-8 md:p-12 shadow-xl shadow-[#6B5CE7]/5 border border-[#E4E6F0] overflow-hidden relative">
+          {/* Background decorations */}
+          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-[#C4BEFA]/20 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div className="text-center mb-10 relative z-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#6B5CE7] to-[#5a4cdb] rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#6B5CE7]/30">
+              <Send className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-4xl font-extrabold text-[#14142B] tracking-tight mb-4">Almost there!</h2>
+            <p className="text-[#8888AA] text-lg font-medium max-w-md mx-auto">
+              We've sent a secure verification link to <span className="text-[#14142B] font-bold border-b border-[#C4BEFA] pb-0.5">{email}</span>
+            </p>
+          </div>
+
+          {/* Quick Onboarding Section */}
+          <div className="bg-[#F7F8FC] rounded-[24px] p-6 md:p-8 mb-10 border border-[#E4E6F0] relative z-10">
+            <h3 className="text-[#14142B] font-bold text-lg mb-6 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#6B5CE7]" />
+              While you wait, here is how Platodo works:
+            </h3>
+            
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-[#E4E6F0] flex items-center justify-center flex-shrink-0 text-[#6B5CE7] font-bold">1</div>
+                <div>
+                  <h4 className="font-bold text-[#14142B] text-base mb-1">Type naturally</h4>
+                  <p className="text-[#8888AA] text-sm font-medium leading-relaxed">
+                    Don't waste time filling out forms. Just type something like <span className="italic font-semibold text-[#4A4A6A]">"Read history chapter 4 by Friday 5pm"</span> into the add task bar.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-[#E4E6F0] flex items-center justify-center flex-shrink-0 text-[#0EA5A0] font-bold">
+                  <BrainCircuit className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#14142B] text-base mb-1">AI does the heavy lifting</h4>
+                  <p className="text-[#8888AA] text-sm font-medium leading-relaxed">
+                    Our AI instantly extracts the subject, deadline, and priority. It automatically groups your tasks by class and date.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-[#E4E6F0] flex items-center justify-center flex-shrink-0 text-[#F59E0B] font-bold">
+                  <BellRing className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#14142B] text-base mb-1">Never miss a deadline</h4>
+                  <p className="text-[#8888AA] text-sm font-medium leading-relaxed">
+                    Check your Planner and Alerts. We'll automatically warn you if you schedule too many things on the same day.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <Link
+              href="/login"
+              className="bg-[#6B5CE7] hover:bg-[#5a4cdb] text-white py-4 px-8 rounded-xl font-bold transition-all text-center flex-1 sm:flex-none shadow-lg shadow-[#6B5CE7]/25 hover:-translate-y-0.5"
+            >
+              I've verified my email
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex w-full bg-white">
