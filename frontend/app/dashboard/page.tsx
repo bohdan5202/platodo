@@ -464,7 +464,7 @@ export default function DashboardPage() {
           <button
             type="submit"
             disabled={!newTaskText.trim()}
-            className="hidden sm:flex bg-[#6B5CE7] text-white py-2 px-5 rounded-xl text-sm font-semibold items-center gap-2 hover:bg-[#5a4cdb] transition-all disabled:opacity-50 active:scale-[0.98]"
+            className="flex flex-shrink-0 bg-[#6B5CE7] text-white py-2 px-4 sm:px-5 rounded-xl text-sm font-semibold items-center gap-2 hover:bg-[#5a4cdb] transition-all disabled:opacity-50 active:scale-[0.98]"
           >
             Add task
           </button>
