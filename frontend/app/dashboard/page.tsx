@@ -344,7 +344,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-12" onClick={() => { setOpenMenuId(null); }}>
+    <div className="max-w-4xl mx-auto pb-12">
+      {openMenuId && (
+        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

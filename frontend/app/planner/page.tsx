@@ -306,7 +306,10 @@ export default function PlannerPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-12" onClick={() => { setOpenMenuId(null); setOpenDropdownId(null); }}>
+    <div className="max-w-4xl mx-auto pb-12">
+      {(openMenuId || openDropdownId) && (
+        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setOpenDropdownId(null); }} />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
