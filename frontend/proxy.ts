@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-export const runtime = 'experimental-edge';
 const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Read JWT from cookies (we'll also set it there on login)
