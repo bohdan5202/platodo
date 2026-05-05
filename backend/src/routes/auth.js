@@ -20,13 +20,44 @@ router.post('/register', async (req, res) => {
 
         const id = require('crypto').randomUUID();
         const hash = await bcrypt.hash(password, 10);
+        const verificationToken = require('crypto').randomBytes(32).toString('hex');
 
         await pool.request()
             .input('id', sql.UniqueIdentifier, id)
             .input('email', sql.NVarChar, email)
             .input('password_hash', sql.NVarChar, hash)
             .input('name', sql.NVarChar, name || null)
-            .query('INSERT INTO users (id, email, password_hash, name) VALUES (@id, @email, @password_hash, @name)');
+            .input('verification_token', sql.NVarChar, verificationToken)
+            .query('INSERT INTO users (id, email, password_hash, name, is_verified, verification_token, verification_token_expires) VALUES (@id, @email, @password_hash, @name, 0, @verification_token, DATEADD(hour, 24, GETDATE()))');
+
+        // Send verification email
+        if (process.env.ACS_CONNECTION_STRING && process.env.ACS_SENDER_EMAIL) {
+            try {
+                const emailClient = new EmailClient(process.env.ACS_CONNECTION_STRING);
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+                const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
+                
+                await emailClient.beginSend({
+                    senderAddress: process.env.ACS_SENDER_EMAIL,
+                    content: {
+                        subject: "Verify your Platodo email",
+                        plainText: `Hello ${name || 'there'},\n\nPlease verify your email address by clicking the link below:\n\n${verifyLink}\n\nThanks,\nThe Platodo Team`,
+                        html: `
+                            <div style="font-family: sans-serif; padding: 20px;">
+                                <h2>Hello ${name || 'there'},</h2>
+                                <p>Please verify your email address by clicking the button below:</p>
+                                <a href="${verifyLink}" style="display: inline-block; padding: 10px 20px; background-color: #6B5CE7; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px 0;">Verify Email</a>
+                                <p style="font-size: 13px; color: #8888AA;">If the button doesn't work, copy and paste this link: <a href="${verifyLink}">${verifyLink}</a></p>
+                                <p>Thanks,<br/>The Platodo Team</p>
+                            </div>
+                        `
+                    },
+                    recipients: { to: [{ address: email }] }
+                });
+            } catch (err) {
+                console.error('Failed to send verification email:', err);
+            }
+        }
 
         res.status(201).json({ message: 'User created' });
     } catch (e) {
@@ -43,13 +74,17 @@ router.post('/login', async (req, res) => {
         const pool = await getPool();
         const result = await pool.request()
             .input('email', sql.NVarChar, email)
-            .query('SELECT id, password_hash FROM users WHERE email = @email');
+            .query('SELECT id, password_hash, is_verified FROM users WHERE email = @email');
 
         if (result.recordset.length === 0) return res.status(400).json({ error: 'Invalid credentials' });
 
         const user = result.recordset[0];
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+
+        if (user.is_verified === false) {
+            return res.status(403).json({ error: 'unverified_email', message: 'Please verify your email before logging in.' });
+        }
 
         if (fcm_token) {
             await pool.request()
@@ -62,6 +97,87 @@ router.post('/login', async (req, res) => {
         res.json({ token });
     } catch (e) {
         console.error('Login error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ error: 'Token is required' });
+
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('token', sql.NVarChar, token)
+            .query('SELECT id FROM users WHERE verification_token = @token AND verification_token_expires > GETDATE()');
+
+        if (result.recordset.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired token' });
+        }
+
+        await pool.request()
+            .input('id', sql.UniqueIdentifier, result.recordset[0].id)
+            .query('UPDATE users SET is_verified = 1, verification_token = NULL, verification_token_expires = NULL WHERE id = @id');
+
+        res.json({ success: true, message: 'Email verified successfully' });
+    } catch (e) {
+        console.error('Verify email error:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/resend-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const pool = await getPool();
+        const checkUser = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .query('SELECT id, name, is_verified FROM users WHERE email = @email');
+
+        if (checkUser.recordset.length === 0) {
+            return res.json({ success: true });
+        }
+
+        const user = checkUser.recordset[0];
+        if (user.is_verified) {
+            return res.status(400).json({ error: 'Email is already verified' });
+        }
+
+        const verificationToken = require('crypto').randomBytes(32).toString('hex');
+        await pool.request()
+            .input('id', sql.UniqueIdentifier, user.id)
+            .input('token', sql.NVarChar, verificationToken)
+            .query('UPDATE users SET verification_token = @token, verification_token_expires = DATEADD(hour, 24, GETDATE()) WHERE id = @id');
+
+        if (process.env.ACS_CONNECTION_STRING && process.env.ACS_SENDER_EMAIL) {
+            const emailClient = new EmailClient(process.env.ACS_CONNECTION_STRING);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
+            
+            await emailClient.beginSend({
+                senderAddress: process.env.ACS_SENDER_EMAIL,
+                content: {
+                    subject: "Verify your Platodo email",
+                    plainText: `Hello ${user.name || 'there'},\n\nPlease verify your email address by clicking the link below:\n\n${verifyLink}\n\nThanks,\nThe Platodo Team`,
+                    html: `
+                        <div style="font-family: sans-serif; padding: 20px;">
+                            <h2>Hello ${user.name || 'there'},</h2>
+                            <p>Please verify your email address by clicking the button below:</p>
+                            <a href="${verifyLink}" style="display: inline-block; padding: 10px 20px; background-color: #6B5CE7; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px 0;">Verify Email</a>
+                            <p style="font-size: 13px; color: #8888AA;">If the button doesn't work, copy and paste this link: <a href="${verifyLink}">${verifyLink}</a></p>
+                            <p>Thanks,<br/>The Platodo Team</p>
+                        </div>
+                    `
+                },
+                recipients: { to: [{ address: email }] }
+            });
+        }
+
+        res.json({ success: true, message: 'Verification email resent' });
+    } catch (e) {
+        console.error('Resend verification error:', e);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

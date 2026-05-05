@@ -12,6 +12,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resendStatus, setResendStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const handleResendVerification = async () => {
+    setResendStatus('loading');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      await axios.post(`${apiUrl}/auth/resend-verification`, { email });
+      setResendStatus('success');
+    } catch (err: any) {
+      setResendStatus('error');
+      setError(err.response?.data?.message || 'Failed to resend. Please try again.');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +48,13 @@ export default function LoginPage() {
         throw new Error('No token received');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to login. Please try again.');
+      if (err.response?.data?.error === 'unverified_email') {
+        setIsUnverified(true);
+        setError(err.response?.data?.message);
+      } else {
+        setIsUnverified(false);
+        setError(err.response?.data?.message || err.response?.data?.detail || err.message || 'Failed to login. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -90,9 +110,25 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#EF4444] px-4 py-3 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#EF4444] flex-shrink-0"></div>
-                {error}
+              <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#EF4444] px-4 py-3 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#EF4444] flex-shrink-0"></div>
+                  {error}
+                </div>
+                {isUnverified && resendStatus !== 'success' && (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendStatus === 'loading'}
+                    className="mt-1 self-start px-3 py-1.5 bg-[#EF4444] text-white text-xs font-bold rounded-lg hover:bg-[#dc2626] transition-colors flex items-center gap-2"
+                  >
+                    {resendStatus === 'loading' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Resend Verification Email
+                  </button>
+                )}
+                {isUnverified && resendStatus === 'success' && (
+                  <span className="text-[#10B981] text-xs font-bold mt-1">Verification email sent! Please check your inbox.</span>
+                )}
               </div>
             )}
 
