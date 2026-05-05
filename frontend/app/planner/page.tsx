@@ -41,7 +41,8 @@ export default function PlannerPage() {
     }
   };
 
-  const pendingSync = tasks.filter(t => !t.is_done && (t.title === null || t.planned_date === null));
+  const pendingSync = tasks.filter(t => !t.is_done && t.title === null);
+  const unscheduled = tasks.filter(t => !t.is_done && t.title !== null && t.planned_date === null);
   const overdue = tasks.filter(t => t.planned_date && isPast(parseISO(t.planned_date)) && !isToday(parseISO(t.planned_date)) && !t.is_done);
   const today = tasks.filter(t => t.planned_date && isToday(parseISO(t.planned_date)));
   const tomorrow = tasks.filter(t => t.planned_date && isTomorrow(parseISO(t.planned_date)));
@@ -61,6 +62,7 @@ export default function PlannerPage() {
 
   const sections = [
     { title: "Pending AI Sync", tasks: pendingSync, color: "text-[#F59E0B]", badge: "bg-[#FEF3C7]" },
+    { title: "Unscheduled", tasks: unscheduled, color: "text-[#8888AA]", badge: "bg-[#F7F8FC]" },
     { title: "Overdue (Planned)", tasks: overdue, color: "text-[#EF4444]", badge: "bg-[#FEE2E2]" },
     { title: "Today", tasks: today, color: "text-[#6B5CE7]", badge: "bg-[#EEF0FF]" },
     { title: "Tomorrow", tasks: tomorrow, color: "text-[#0EA5A0]", badge: "bg-[#E0F7F6]" },
