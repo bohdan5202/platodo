@@ -18,6 +18,7 @@ export default function PlannerPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [customDateValue, setCustomDateValue] = useState<string>('');
   const [editForm, setEditForm] = useState({ title: '', subject: '', deadline: '', priority: 1 });
 
   if (isLoading) {
@@ -248,7 +249,11 @@ export default function PlannerPage() {
             {/* Move (reschedule) dropdown */}
             <div className="relative">
               <button
-                onClick={() => { setOpenDropdownId(openDropdownId === task.id ? null : task.id); setOpenMenuId(null); }}
+                onClick={() => { 
+                  setOpenDropdownId(openDropdownId === task.id ? null : task.id); 
+                  setOpenMenuId(null); 
+                  setCustomDateValue(task.planned_date ? format(parseISO(task.planned_date), 'yyyy-MM-dd') : '');
+                }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-[#E4E6F0] text-sm font-medium text-[#4A4A6A] hover:bg-[#F7F8FC] transition-colors"
               >
                 <CalendarIcon className="w-4 h-4 text-[#8888AA]" />
@@ -262,19 +267,27 @@ export default function PlannerPage() {
                     <button onClick={() => handleReschedule(task.id, addDays(new Date(), 2).toISOString())} className="w-full text-left px-3 py-2 text-sm font-medium text-[#14142B] hover:bg-[#F7F8FC] rounded-xl transition-colors">{format(addDays(new Date(), 2), 'EEEE')}</button>
                     <div className="px-3 py-2">
                       <label className="text-xs text-[#8888AA] font-medium mb-1.5 block">Custom date</label>
-                      <input
-                        type="date"
-                        min={format(new Date(), 'yyyy-MM-dd')}
-                        max={task.deadline ? format(parseISO(task.deadline), 'yyyy-MM-dd') : undefined}
-                        className="w-full text-sm border border-[#E4E6F0] rounded-lg px-2 py-1.5 outline-none focus:border-[#6B5CE7] text-[#14142B] bg-white cursor-pointer"
-                        onChange={e => {
-                          if (e.target.value) {
-                            // Append T00:00:00 to force LOCAL time, not UTC
-                            const d = new Date(`${e.target.value}T00:00:00`);
-                            if (!isNaN(d.getTime())) handleReschedule(task.id, d.toISOString());
-                          }
-                        }}
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={customDateValue}
+                          min={format(new Date(), 'yyyy-MM-dd')}
+                          max={task.deadline ? format(parseISO(task.deadline), 'yyyy-MM-dd') : undefined}
+                          className="flex-1 w-full text-sm border border-[#E4E6F0] rounded-lg px-2 py-1.5 outline-none focus:border-[#6B5CE7] text-[#14142B] bg-white cursor-pointer"
+                          onChange={e => setCustomDateValue(e.target.value)}
+                        />
+                        <button
+                          onClick={() => {
+                            if (customDateValue) {
+                              const d = new Date(`${customDateValue}T00:00:00`);
+                              if (!isNaN(d.getTime())) handleReschedule(task.id, d.toISOString());
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-[#6B5CE7] text-white text-xs font-semibold rounded-lg hover:bg-[#5a4cdb] transition-colors"
+                        >
+                          Set
+                        </button>
+                      </div>
                     </div>
                     <div className="h-px bg-[#E4E6F0] my-1 mx-2"></div>
                     <button onClick={() => handleReschedule(task.id, null)} className="w-full text-left px-3 py-2 text-sm font-medium text-[#8888AA] hover:bg-[#F7F8FC] rounded-xl transition-colors">Clear date</button>
