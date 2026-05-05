@@ -346,12 +346,31 @@ export default function PlannerPage() {
         ))}
 
         {tasks.length === 0 && !isLoading && (
-          <div className="text-center py-16 bg-white rounded-[24px] border border-[#E4E6F0] border-dashed">
-            <div className="bg-[#EEF0FF] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CalendarIcon className="w-8 h-8 text-[#6B5CE7]" />
+          <div className="bg-white rounded-[24px] border border-[#E4E6F0] border-dashed p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm mt-8">
+            <div className="bg-[#EEF0FF] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CalendarIcon className="w-10 h-10 text-[#6B5CE7]" />
             </div>
-            <h3 className="text-[#14142B] font-bold text-lg mb-1">Your planner is empty</h3>
-            <p className="text-[#8888AA] font-medium text-sm">Add tasks from the dashboard to see them here.</p>
+            <h3 className="text-[#14142B] font-extrabold text-2xl mb-3 tracking-tight">Your planner is empty</h3>
+            <p className="text-[#8888AA] font-medium text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
+              When you add tasks with dates, they will automatically appear here grouped by day.
+            </p>
+            
+            <div className="grid sm:grid-cols-2 gap-4 text-left">
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0]">
+                <div className="bg-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-[#6B5CE7] font-bold mb-3 border border-[#E4E6F0]">
+                  <CalendarIcon className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-[#14142B] mb-1">Visual Schedule</h4>
+                <p className="text-sm text-[#8888AA] leading-relaxed">See exactly what needs your attention Today, Tomorrow, and beyond.</p>
+              </div>
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0]">
+                <div className="bg-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-[#0EA5A0] font-bold mb-3 border border-[#E4E6F0]">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-[#14142B] mb-1">Stay ahead</h4>
+                <p className="text-sm text-[#8888AA] leading-relaxed">Overdue tasks are highlighted in red so nothing falls through the cracks.</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

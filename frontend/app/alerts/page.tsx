@@ -120,16 +120,35 @@ export default function AlertsPage() {
 
       {displayAlerts.length === 0 ? (
         /* Empty State */
-        <div className="text-center py-20 bg-white rounded-[24px] border border-[#E4E6F0] border-dashed">
-          <div className="bg-[#EEF0FF] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5">
+        <div className="bg-white rounded-[24px] border border-[#E4E6F0] border-dashed p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm mt-8">
+          <div className="bg-[#EEF0FF] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
             {activeTab === 'active' ? <BellOff className="w-10 h-10 text-[#6B5CE7]" /> : <History className="w-10 h-10 text-[#6B5CE7]" />}
           </div>
-          <h3 className="text-[#14142B] font-bold text-xl mb-2">{activeTab === 'active' ? 'No alerts yet' : 'No history'}</h3>
-          <p className="text-[#8888AA] font-medium text-sm max-w-xs mx-auto">
+          <h3 className="text-[#14142B] font-extrabold text-2xl mb-3 tracking-tight">{activeTab === 'active' ? 'You are all caught up!' : 'No history'}</h3>
+          <p className="text-[#8888AA] font-medium text-[15px] mb-8 max-w-md mx-auto leading-relaxed">
             {activeTab === 'active' 
-              ? 'Alerts appear here when the AI detects deadline conflicts or sends your morning briefing.'
-              : 'You have no past alerts or morning briefings yet.'}
+              ? "You don't have any new alerts. Here is what your AI assistant keeps an eye on:"
+              : "You haven't received any alerts or briefings yet."}
           </p>
+
+          {activeTab === 'active' && (
+            <div className="grid sm:grid-cols-2 gap-4 text-left">
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0]">
+                <div className="bg-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-[#F59E0B] font-bold mb-3 border border-[#E4E6F0]">
+                  <Sun className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-[#14142B] mb-1">Morning Briefings</h4>
+                <p className="text-sm text-[#8888AA] leading-relaxed">A daily summary of what you need to focus on today.</p>
+              </div>
+              <div className="bg-[#F7F8FC] p-5 rounded-2xl border border-[#E4E6F0]">
+                <div className="bg-white w-8 h-8 rounded-lg shadow-sm flex items-center justify-center text-[#EF4444] font-bold mb-3 border border-[#E4E6F0]">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-[#14142B] mb-1">Deadline Conflicts</h4>
+                <p className="text-sm text-[#8888AA] leading-relaxed">Warnings when you schedule too many tasks for the same day.</p>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
