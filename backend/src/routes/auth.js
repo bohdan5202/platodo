@@ -139,7 +139,10 @@ router.post('/forgot-password', async (req, res) => {
 
         console.log(`[Forgot Password] Initializing EmailClient...`);
         const emailClient = new EmailClient(process.env.ACS_CONNECTION_STRING);
-        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+        
+        // Use FRONTEND_URL if set in Azure, otherwise default to localhost for testing
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const resetLink = `${frontendUrl}/reset-password?token=${token}`;
         
         console.log(`[Forgot Password] Sending email via ACS to ${email} from ${process.env.ACS_SENDER_EMAIL}...`);
         const poller = await emailClient.beginSend({
