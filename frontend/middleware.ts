@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'experimental-edge';
 const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export function middleware(request: NextRequest) {
