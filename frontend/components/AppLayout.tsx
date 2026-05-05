@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 import { getToken } from '../utils/auth';
 import { Menu, CheckSquare } from 'lucide-react';
+import { useAlerts } from '../hooks/useAlerts';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,6 +15,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   
   // Load collapse state from localStorage or default to false
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const { alerts } = useAlerts();
+  const hasUnread = alerts.some(a => !a.is_read);
 
   const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/register') || pathname?.startsWith('/forgot-password') || pathname?.startsWith('/reset-password');
 
@@ -75,8 +79,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <h1 className="text-xl font-bold text-[#14142B]">Platodo</h1>
           </div>
-          <button onClick={() => setIsMobileOpen(true)} className="p-2 text-[#4A4A6A] hover:bg-[#F7F8FC] rounded-lg">
+          <button onClick={() => setIsMobileOpen(true)} className="p-2 text-[#4A4A6A] hover:bg-[#F7F8FC] rounded-lg relative">
             <Menu className="w-6 h-6" />
+            {hasUnread && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-[#EF4444] rounded-full border border-white"></span>
+            )}
           </button>
         </header>
 

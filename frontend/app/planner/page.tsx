@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useTasks, Task } from '../../hooks/useTasks';
-import { CheckCircle2, Circle, Calendar as CalendarIcon, Clock, Loader2, ChevronDown, MoreVertical, Pencil, Trash2, Check, X, AlertCircle } from 'lucide-react';
+import { useAlerts } from '../../hooks/useAlerts';
+import { CheckCircle2, Circle, Calendar as CalendarIcon, Clock, Loader2, ChevronDown, MoreVertical, Pencil, Trash2, Check, X, AlertCircle, Bell, Sun, ArrowRight } from 'lucide-react';
 import { format, parseISO, isToday, isTomorrow, isPast, isAfter, endOfTomorrow, addDays } from 'date-fns';
+import Link from 'next/link';
 
 const PRIORITIES = [
   { value: 5, label: 'P5 — Critical', color: 'text-[#EF4444]', bg: 'bg-[#FEE2E2]' },
@@ -15,6 +17,11 @@ const PRIORITIES = [
 
 export default function PlannerPage() {
   const { tasks, isLoading, error, toggleTaskDone, updateTaskDate, updateTask, deleteTask } = useTasks();
+  const { alerts, markAllAsRead } = useAlerts();
+  const unreadAlerts = alerts.filter(a => !a.is_read);
+  const unreadConflicts = unreadAlerts.filter(a => a.type !== 'morning_briefing');
+  const unreadBriefings = unreadAlerts.filter(a => a.type === 'morning_briefing');
+  const [alertsBannerHidden, setAlertsBannerHidden] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -341,6 +348,61 @@ export default function PlannerPage() {
           <p className="text-[#8888AA] mt-1.5 font-medium">Your tasks organized by planned work date.</p>
         </div>
       </div>
+
+      {/* Alerts Warning Banner */}
+      {unreadConflicts.length > 0 && !alertsBannerHidden && (
+        <div className="bg-gradient-to-r from-[#FEF2F2] to-[#FFF5F5] border border-[#FCA5A5] rounded-2xl p-4 flex gap-3 mb-6 items-center">
+          <div className="flex-shrink-0 w-9 h-9 bg-[#EF4444] rounded-xl flex items-center justify-center">
+            <Bell className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-[#EF4444] uppercase tracking-wider mb-0.5">New Alerts</p>
+            <p className="text-[#14142B] text-sm font-medium">
+              You have <span className="font-bold text-[#EF4444]">{unreadConflicts.length}</span> unread alert{unreadConflicts.length > 1 ? 's' : ''} — deadline conflict detected!
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/alerts"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#EF4444] text-white text-xs font-semibold rounded-xl hover:bg-[#dc2626] transition-colors"
+            >
+              View <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              onClick={() => {
+                setAlertsBannerHidden(true);
+                markAllAsRead();
+              }}
+              className="px-3 py-1.5 border border-[#FCA5A5] text-[#EF4444] text-xs font-semibold rounded-xl hover:bg-[#FEF2F2] transition-colors"
+            >
+              Hide
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Morning Briefing Banner */}
+      {unreadBriefings.length > 0 && (
+        <div className="bg-gradient-to-r from-[#FEF3C7] to-[#FFF7ED] border border-[#FDE68A] rounded-2xl p-4 flex gap-3 mb-6 items-center">
+          <div className="flex-shrink-0 w-9 h-9 bg-[#F59E0B] rounded-xl flex items-center justify-center">
+            <Sun className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider mb-1">New Morning Briefing</p>
+            <p className="text-[#14142B] text-sm font-medium leading-relaxed line-clamp-2">
+              {unreadBriefings[0].message}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href="/alerts"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F59E0B] text-white text-xs font-semibold rounded-xl hover:bg-[#d97706] transition-colors"
+            >
+              Read <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#EF4444] px-4 py-3 rounded-xl flex items-center gap-3 mb-6 text-sm font-medium">
