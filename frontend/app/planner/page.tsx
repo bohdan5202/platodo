@@ -87,7 +87,7 @@ export default function PlannerPage() {
   const saveEdit = (id: string) => {
     let finalDeadline = null;
     if (editForm.deadline) {
-      const d = new Date(editForm.deadline);
+      const d = new Date(`${editForm.deadline}T00:00:00`);
       if (!isNaN(d.getTime())) finalDeadline = d.toISOString();
     }
     updateTask(id, {
@@ -269,7 +269,8 @@ export default function PlannerPage() {
                         className="w-full text-sm border border-[#E4E6F0] rounded-lg px-2 py-1.5 outline-none focus:border-[#6B5CE7] text-[#14142B] bg-white cursor-pointer"
                         onChange={e => {
                           if (e.target.value) {
-                            const d = new Date(e.target.value);
+                            // Append T00:00:00 to force LOCAL time, not UTC
+                            const d = new Date(`${e.target.value}T00:00:00`);
                             if (!isNaN(d.getTime())) handleReschedule(task.id, d.toISOString());
                           }
                         }}
