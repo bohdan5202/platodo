@@ -314,7 +314,7 @@ export default function DashboardPage() {
             <div className="relative">
               <button
                 onClick={() => setOpenMenuId(openMenuId === task.id ? null : task.id)}
-                className="p-1.5 rounded-xl border border-transparent text-[#CDD0E8] hover:border-[#E4E6F0] hover:bg-[#F7F8FC] hover:text-[#14142B] transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                className="p-1.5 rounded-xl border border-transparent text-[#CDD0E8] hover:border-[#E4E6F0] hover:bg-[#F7F8FC] hover:text-[#14142B] transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -373,7 +373,7 @@ export default function DashboardPage() {
                   {displayName} 👋
                   <button
                     onClick={() => { setNameInput(user?.name || ''); setEditingName(true); }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-[#EEF0FF] text-[#8888AA] hover:text-[#6B5CE7]"
+                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-[#EEF0FF] text-[#8888AA] hover:text-[#6B5CE7]"
                     title="Edit name"
                   >
                     <Pencil className="w-4 h-4" />
