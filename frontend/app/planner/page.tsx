@@ -85,10 +85,15 @@ export default function PlannerPage() {
   };
 
   const saveEdit = (id: string) => {
+    let finalDeadline = null;
+    if (editForm.deadline) {
+      const d = new Date(editForm.deadline);
+      if (!isNaN(d.getTime())) finalDeadline = d.toISOString();
+    }
     updateTask(id, {
       title: editForm.title,
       subject: editForm.subject || null,
-      deadline: editForm.deadline ? new Date(editForm.deadline).toISOString() : null,
+      deadline: finalDeadline,
       priority: editForm.priority,
     });
     setEditingId(null);
@@ -262,7 +267,12 @@ export default function PlannerPage() {
                         min={format(new Date(), 'yyyy-MM-dd')}
                         max={task.deadline ? format(parseISO(task.deadline), 'yyyy-MM-dd') : undefined}
                         className="w-full text-sm border border-[#E4E6F0] rounded-lg px-2 py-1.5 outline-none focus:border-[#6B5CE7] text-[#14142B] bg-white cursor-pointer"
-                        onChange={e => { if (e.target.value) handleReschedule(task.id, new Date(e.target.value).toISOString()); }}
+                        onChange={e => {
+                          if (e.target.value) {
+                            const d = new Date(e.target.value);
+                            if (!isNaN(d.getTime())) handleReschedule(task.id, d.toISOString());
+                          }
+                        }}
                       />
                     </div>
                     <div className="h-px bg-[#E4E6F0] my-1 mx-2"></div>

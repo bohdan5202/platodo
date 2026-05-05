@@ -61,10 +61,15 @@ export default function DashboardPage() {
   };
 
   const saveEdit = (id: string) => {
+    let finalDeadline = null;
+    if (editForm.deadline) {
+      const d = new Date(editForm.deadline);
+      if (!isNaN(d.getTime())) finalDeadline = d.toISOString();
+    }
     updateTask(id, {
       title: editForm.title,
       subject: editForm.subject || null,
-      deadline: editForm.deadline ? new Date(editForm.deadline).toISOString() : null,
+      deadline: finalDeadline,
       priority: editForm.priority,
     });
     setEditingId(null);
