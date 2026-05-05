@@ -42,7 +42,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }:
 
       <aside 
         className={`
-          fixed inset-y-0 left-0 z-50 bg-white border-r border-[#E4E6F0] flex flex-col h-screen transform transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-50 bg-white border-r border-[#E4E6F0] flex flex-col h-[100dvh] transform transition-all duration-300 ease-in-out
           md:sticky md:top-0 md:translate-x-0
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isCollapsed ? 'md:w-20' : 'md:w-64 w-64'}

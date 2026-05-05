@@ -319,7 +319,7 @@ export default function DashboardPage() {
                 <MoreVertical className="w-4 h-4" />
               </button>
               {openMenuId === task.id && (
-                <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="p-1.5 space-y-1">
                     <button
                       onClick={() => startEditing(task)}

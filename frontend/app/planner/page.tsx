@@ -248,7 +248,7 @@ export default function PlannerPage() {
                 <ChevronDown className="w-3.5 h-3.5 text-[#8888AA]" />
               </button>
               {openDropdownId === task.id && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="p-1.5 space-y-1">
                     <button onClick={() => handleReschedule(task.id, new Date().toISOString())} className="w-full text-left px-3 py-2 text-sm font-medium text-[#14142B] hover:bg-[#F7F8FC] rounded-xl transition-colors">Today</button>
                     <button onClick={() => handleReschedule(task.id, addDays(new Date(), 1).toISOString())} className="w-full text-left px-3 py-2 text-sm font-medium text-[#14142B] hover:bg-[#F7F8FC] rounded-xl transition-colors">Tomorrow</button>
@@ -279,7 +279,7 @@ export default function PlannerPage() {
                 <MoreVertical className="w-4 h-4" />
               </button>
               {openMenuId === task.id && (
-                <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-[#E4E6F0] rounded-2xl shadow-xl z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="p-1.5 space-y-1">
                     <button
                       onClick={() => startEditing(task)}
