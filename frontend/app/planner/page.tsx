@@ -133,7 +133,7 @@ export default function PlannerPage() {
         <div className="flex-1 min-w-0">
           {isParsing ? (
             <div className="flex items-center gap-2">
-              <span className="text-[#14142B] truncate font-medium text-[15px]">{task.raw_input}</span>
+              <span className="text-[#14142B] break-words leading-snug font-medium text-[15px]">{task.raw_input}</span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#EEF0FF] text-[#6B5CE7]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#6B5CE7] animate-pulse"></span>
                 AI parsing...
@@ -207,7 +207,7 @@ export default function PlannerPage() {
           ) : (
             /* ── Normal View ── */
             <div className="flex flex-col">
-              <span className={`text-[15px] font-medium truncate ${task.is_done ? 'line-through text-[#8888AA]' : 'text-[#14142B]'}`}>
+              <span className={`text-[15px] font-medium break-words leading-snug ${task.is_done ? 'line-through text-[#8888AA]' : 'text-[#14142B]'}`}>
                 {task.title}
               </span>
               <div className="flex items-center gap-2 mt-1.5 text-xs flex-wrap">
