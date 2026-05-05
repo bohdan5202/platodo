@@ -53,7 +53,7 @@ export default function LoginPage() {
         setError(err.response?.data?.message);
       } else {
         setIsUnverified(false);
-        setError(err.response?.data?.message || err.response?.data?.detail || err.message || 'Failed to login. Please try again.');
+        setError(err.response?.data?.error || err.response?.data?.message || err.response?.data?.detail || err.message || 'Failed to login. Please try again.');
       }
     } finally {
       setIsLoading(false);

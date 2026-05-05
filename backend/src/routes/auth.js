@@ -76,11 +76,11 @@ router.post('/login', async (req, res) => {
             .input('email', sql.NVarChar, email)
             .query('SELECT id, password_hash, is_verified FROM users WHERE email = @email');
 
-        if (result.recordset.length === 0) return res.status(400).json({ error: 'Invalid credentials' });
+        if (result.recordset.length === 0) return res.status(400).json({ error: 'User not found' });
 
         const user = result.recordset[0];
         const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+        if (!isMatch) return res.status(400).json({ error: 'Invalid password' });
 
         if (user.is_verified === false) {
             return res.status(403).json({ error: 'unverified_email', message: 'Please verify your email before logging in.' });
