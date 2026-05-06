@@ -36,8 +36,18 @@ export async function registerForPushNotificationsAsync() {
     }
     // Get Expo push token. Note: This requires a project ID if using EAS Build.
     try {
+      if (Constants.appOwnership === 'expo') {
+        console.warn('Push notifications are not fully supported in Expo Go. Skipping token generation.');
+        return null;
+      }
+
       const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
       
+      if (!projectId) {
+         console.warn('No projectId found. Skipping push token generation.');
+         return null;
+      }
+
       token = (await Notifications.getExpoPushTokenAsync({
         projectId,
       })).data;

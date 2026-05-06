@@ -19,6 +19,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const segments = useSegments();
 
@@ -36,21 +37,15 @@ export default function RootLayout() {
         await registerForPushNotificationsAsync();
         const token = await getToken();
         
-        // Navigation guard
-        const inAuthGroup = segments[0] === '(auth)';
+        // Handle initial boot routing once
+        setTimeout(() => {
+          if (token) {
+            router.replace('/(tabs)/dashboard');
+          } else {
+            router.replace('/login');
+          }
+        }, 10);
         
-        if (token) {
-          // If we have a token, default to tabs
-          // Wait for mount then redirect
-          setTimeout(() => {
-             router.replace('/(tabs)/dashboard');
-          }, 0);
-        } else {
-          // If no token, go to login
-          setTimeout(() => {
-             router.replace('/login');
-          }, 0);
-        }
       } catch (e) {
         console.warn(e);
       } finally {
@@ -61,7 +56,7 @@ export default function RootLayout() {
     if (fontsLoaded) {
       prepare();
     }
-  }, [fontsLoaded, segments]);
+  }, [fontsLoaded]);
 
   useEffect(() => {
     if (appIsReady) {

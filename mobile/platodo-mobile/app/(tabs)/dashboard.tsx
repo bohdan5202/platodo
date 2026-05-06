@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, RefreshControl, Modal, Alert } from 'react-native';
-import { Sparkles, Loader2, X, Check } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, RefreshControl, Modal, Alert, ActivityIndicator } from 'react-native';
+import { Sparkles, Loader2, X, Check, LogOut } from 'lucide-react-native';
 import { useTasks, Task } from '../../hooks/useTasks';
 import { useUser } from '../../hooks/useUser';
 import StatCard from '../../components/StatCard';
 import TaskItem from '../../components/TaskItem';
 import { isToday, isThisWeek, parseISO } from 'date-fns';
+import { removeToken } from '../../utils/auth';
+import { useRouter } from 'expo-router';
 
 export default function DashboardScreen() {
   const { tasks, isLoading, addTask, toggleTaskDone, deleteTask, updateTask, fetchTasks } = useTasks();
   const { displayName, user, updateName } = useUser();
+  const router = useRouter();
   const [newTaskText, setNewTaskText] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   
   // Modal State
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editSubject, setEditSubject] = useState('');
   const [editPriority, setEditPriority] = useState(1);
 
   const onRefresh = async () => {
@@ -33,14 +37,20 @@ export default function DashboardScreen() {
   const openOptions = (task: Task) => {
     setSelectedTask(task);
     setEditTitle(task.title || '');
+    setEditSubject(task.subject || '');
     setEditPriority(task.priority || 1);
   };
 
   const handleSaveEdit = () => {
     if (selectedTask) {
-      updateTask(selectedTask.id, { title: editTitle, priority: editPriority });
+      updateTask(selectedTask.id, { title: editTitle, subject: editSubject || null, priority: editPriority });
       setSelectedTask(null);
     }
+  };
+
+  const handleLogout = async () => {
+    await removeToken();
+    router.replace('/login');
   };
 
   const handleDelete = () => {
@@ -85,8 +95,13 @@ export default function DashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>{greetingText}, {displayName || 'there'} 👋</Text>
-          <Text style={styles.date}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.greeting}>{greetingText}, {displayName || 'there'} 👋</Text>
+            <Text style={styles.date}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <LogOut size={20} color="#EF4444" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.addBar}>
@@ -159,6 +174,13 @@ export default function DashboardScreen() {
               onChangeText={setEditTitle}
               placeholder="Task title"
             />
+
+            <TextInput
+              style={styles.modalInput}
+              value={editSubject}
+              onChangeText={setEditSubject}
+              placeholder="Subject (optional)"
+            />
             
             <Text style={styles.label}>Priority</Text>
             <View style={styles.priorityRow}>
@@ -189,8 +211,6 @@ export default function DashboardScreen() {
   );
 }
 
-import { ActivityIndicator } from 'react-native';
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -213,6 +233,17 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerText: {
+    flex: 1,
+  },
+  logoutBtn: {
+    padding: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
   },
   greeting: {
     fontFamily: 'DMSans_700Bold',

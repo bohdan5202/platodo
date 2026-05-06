@@ -12,6 +12,7 @@ export default function PlannerScreen() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editSubject, setEditSubject] = useState('');
   const [editPriority, setEditPriority] = useState(1);
 
   const onRefresh = async () => {
@@ -23,12 +24,13 @@ export default function PlannerScreen() {
   const openOptions = (task: Task) => {
     setSelectedTask(task);
     setEditTitle(task.title || '');
+    setEditSubject(task.subject || '');
     setEditPriority(task.priority || 1);
   };
 
   const handleSaveEdit = () => {
     if (selectedTask) {
-      updateTask(selectedTask.id, { title: editTitle, priority: editPriority });
+      updateTask(selectedTask.id, { title: editTitle, subject: editSubject || null, priority: editPriority });
       setSelectedTask(null);
     }
   };
@@ -150,6 +152,13 @@ export default function PlannerScreen() {
               value={editTitle}
               onChangeText={setEditTitle}
               placeholder="Task title"
+            />
+            
+            <TextInput
+              style={styles.modalInput}
+              value={editSubject}
+              onChangeText={setEditSubject}
+              placeholder="Subject (optional)"
             />
             
             <Text style={styles.label}>Priority</Text>

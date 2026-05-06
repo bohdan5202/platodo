@@ -27,12 +27,25 @@ const useApi = () => {
       (error) => Promise.reject(error)
     );
 
+    let isRedirecting = false;
+
     instance.interceptors.response.use(
       (response) => response,
       async (error) => {
         if (error.response && error.response.status === 401) {
           await removeToken();
-          router.replace('/login');
+          if (!isRedirecting) {
+            isRedirecting = true;
+            setTimeout(() => {
+              try {
+                router.replace('/login');
+              } catch (e) {
+                // Ignore navigation errors during unmounts
+              } finally {
+                isRedirecting = false;
+              }
+            }, 100);
+          }
         }
         return Promise.reject(error);
       }
