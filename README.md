@@ -2,42 +2,40 @@
 
 [![Backend Azure Deploy](https://github.com/bohdan5202/platodo/actions/workflows/main_platodo-api-5202.yml/badge.svg)](https://github.com/bohdan5202/platodo/actions/workflows/main_platodo-api-5202.yml)
 
-Platodo is an AI-powered planner and task manager for students. It turns natural-language tasks into structured plans, schedules work dates, and warns users about deadline overload.
+Platodo is an AI-powered planner for students. It converts natural-language tasks into structured plans, schedules work sessions, and helps users avoid deadline overload.
 
-## Why Platodo is useful
+## Key features
 
-- **Natural-language task capture**: users can type tasks like “Math homework by Friday,” and AI extracts title, subject, deadline, and priority.
-- **Auto-planning**: each task gets a planned work date based on workload and due date.
-- **Deadline conflict detection**: AI generates alerts when too many tasks fall on the same day.
-- **Daily briefings**: scheduled morning summaries are generated and delivered to users.
-- **Cross-platform clients**: web app (Next.js) and mobile app (Expo/React Native) share the same backend API.
+- Natural-language task capture with AI extraction (title, subject, deadline, priority)
+- Automatic planning and work-date suggestions
+- Deadline conflict detection and proactive alerts
+- Morning briefings and reminders
+- Web + mobile clients backed by a shared API
 
-## Project structure
+## Repository structure
 
 ```text
-platodo/
-├── backend/               # Express API + AI task parsing + auth + planner routes
-├── frontend/              # Next.js web client
-├── mobile/platodo-mobile/ # Expo React Native mobile client
-├── functions/             # Azure Functions timers (morning briefing, deadline watcher)
-└── .github/workflows/     # CI/CD workflow(s)
+/home/runner/work/platodo/platodo
+├── /backend                Express API, auth, planner, AI parsing
+├── /frontend               Next.js web app
+├── /mobile/platodo-mobile  Expo React Native app
+├── /functions              Azure Functions timers and scheduled jobs
+└── /.github/workflows      CI/CD pipelines
 ```
 
-## How to get started
-
-### 1) Prerequisites
+## Prerequisites
 
 - Node.js 20+
 - npm 10+
 - Azure SQL Database
 - Azure OpenAI deployment
-- Firebase project/service account (for push notifications)
-- (Optional) Azure Communication Services Email (for verification and password reset emails)
-- (Optional) Azure Functions Core Tools v4 for local timer-function development
+- Firebase project/service account (push notifications)
+- Optional: Azure Communication Services Email (verification and reset emails)
+- Optional: Azure Functions Core Tools v4 (local Functions runtime)
 
-### 2) Install dependencies
+## Installation
 
-From the repository root:
+Install dependencies for each app:
 
 ```bash
 cd /home/runner/work/platodo/platodo/backend && npm install
@@ -46,11 +44,11 @@ cd /home/runner/work/platodo/platodo/mobile/platodo-mobile && npm install
 cd /home/runner/work/platodo/platodo/functions && npm install
 ```
 
-> Note: in restricted/offline environments, `functions` install can fail while downloading Azure Functions Core Tools.
+> In restricted/offline environments, `functions` install may fail while downloading Azure Functions Core Tools.
 
-### 3) Configure environment variables
+## Environment setup
 
-#### Backend (`backend/.env`)
+### Backend: `/home/runner/work/platodo/platodo/backend/.env`
 
 ```bash
 PORT=8080
@@ -71,21 +69,21 @@ ACS_CONNECTION_STRING=<your_acs_connection_string>
 ACS_SENDER_EMAIL=<your_verified_sender>
 ```
 
-#### Frontend (`frontend/.env.local`)
+### Frontend: `/home/runner/work/platodo/platodo/frontend/.env.local`
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
 
-#### Mobile (`mobile/platodo-mobile/.env`)
+### Mobile: `/home/runner/work/platodo/platodo/mobile/platodo-mobile/.env`
 
 ```bash
 EXPO_PUBLIC_API_URL=http://10.0.2.2:8080
 ```
 
-#### Azure Functions (`functions/local.settings.json`)
+### Functions: `/home/runner/work/platodo/platodo/functions/local.settings.json`
 
-Use the same core values as backend:
+Provide the same core values as backend:
 
 - `AZURE_SQL_CONNECTION_STRING`
 - `AZURE_OPENAI_ENDPOINT`
@@ -93,9 +91,9 @@ Use the same core values as backend:
 - `AZURE_OPENAI_DEPLOYMENT`
 - `FIREBASE_CREDENTIALS`
 
-### 4) Run services
+## Run locally
 
-#### Backend
+### Backend
 
 ```bash
 cd /home/runner/work/platodo/platodo/backend
@@ -104,7 +102,7 @@ npm run dev
 
 API base URL: `http://localhost:8080`
 
-#### Frontend (web)
+### Frontend
 
 ```bash
 cd /home/runner/work/platodo/platodo/frontend
@@ -113,37 +111,35 @@ npm run dev
 
 Web app: `http://localhost:3000`
 
-#### Mobile (Expo)
+### Mobile (Expo)
 
 ```bash
 cd /home/runner/work/platodo/platodo/mobile/platodo-mobile
 npm run start
 ```
 
-#### Azure Functions (optional local run)
+### Azure Functions (optional)
 
 ```bash
 cd /home/runner/work/platodo/platodo/functions
 npm run start
 ```
 
-## Usage examples
+## API quick examples
 
-### Register and login
+### Register + login
 
 ```bash
-# Register
 curl -X POST http://localhost:8080/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"student@example.com","name":"Student","password":"StrongPass123!"}'
 
-# Login
 curl -X POST http://localhost:8080/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"student@example.com","password":"StrongPass123!"}'
 ```
 
-### Create a task in natural language
+### Create task from natural language
 
 ```bash
 curl -X POST http://localhost:8080/tasks \
@@ -152,58 +148,58 @@ curl -X POST http://localhost:8080/tasks \
   -d '{"text":"Read chapter 4 of biology by Friday at 5pm"}'
 ```
 
-### Fetch planner data
+### Fetch planner
 
 ```bash
 curl -X GET http://localhost:8080/planner \
   -H "Authorization: ******"
 ```
 
-## Scripts
+## Script reference
 
 ### Backend (`backend/package.json`)
 
 - `npm run dev` — start API with nodemon
-- `npm start` — start API with node
+- `npm start` — start API with Node.js
 
 ### Frontend (`frontend/package.json`)
 
-- `npm run dev` — run Next.js dev server
+- `npm run dev` — start Next.js dev server
 - `npm run build` — production build
-- `npm run start` — run production server
-- `npm run lint` — run ESLint
+- `npm run start` — production server
+- `npm run lint` — ESLint
 
 ### Mobile (`mobile/platodo-mobile/package.json`)
 
 - `npm run start` — Expo dev server
-- `npm run android` — open Android target
-- `npm run ios` — open iOS target
-- `npm run web` — run Expo web target
+- `npm run android` — Android target
+- `npm run ios` — iOS target
+- `npm run web` — Expo web target
 - `npm run lint` — Expo lint
 
 ### Functions (`functions/package.json`)
 
-- `npm run start` — start Azure Functions host
+- `npm run start` — Azure Functions host
 - `npm run test` — placeholder test script
 
-## Where to get help
+## Support
 
-- Open an issue in this repository: <https://github.com/bohdan5202/platodo/issues>
-- Review app-specific code and docs:
-  - Web app: `frontend/README.md`
-  - Mobile app: `mobile/platodo-mobile/README.md`
-- Check workflow/deployment status in GitHub Actions:
-  - `.github/workflows/main_platodo-api-5202.yml`
+- Open issues: <https://github.com/bohdan5202/platodo/issues>
+- App-specific docs:
+  - `/home/runner/work/platodo/platodo/frontend/README.md`
+  - `/home/runner/work/platodo/platodo/mobile/platodo-mobile/README.md`
+- CI workflow:
+  - `/home/runner/work/platodo/platodo/.github/workflows/main_platodo-api-5202.yml`
 
-## Maintainers and contributing
+## Contributing
 
-- **Maintainer:** [@bohdan5202](https://github.com/bohdan5202)
+Maintainer: [@bohdan5202](https://github.com/bohdan5202)
 
-Contributions are welcome. To contribute:
+Contributions are welcome:
 
 1. Fork the repository
 2. Create a feature branch
-3. Make focused changes with clear commit messages
-4. Open a pull request with context, screenshots (if UI), and testing notes
+3. Keep changes focused with clear commit messages
+4. Open a pull request with context, test notes, and screenshots for UI changes
 
-If you plan larger changes, please open an issue first to discuss scope and approach.
+For larger changes, open an issue first to align on scope.
