@@ -2,140 +2,53 @@
 
 [![Backend Azure Deploy](https://github.com/bohdan5202/platodo/actions/workflows/main_platodo-api-5202.yml/badge.svg)](https://github.com/bohdan5202/platodo/actions/workflows/main_platodo-api-5202.yml)
 
-Platodo is an AI-powered planner for students. It converts natural-language tasks into structured plans, schedules work sessions, and helps users avoid deadline overload.
+Platodo is an AI-powered student planner that turns natural-language tasks into structured plans, schedules work sessions, and warns about deadline overload.
 
-## Key features
+## What Platodo provides
 
-- Natural-language task capture with AI extraction (title, subject, deadline, priority)
+- Natural-language task intake with AI extraction of key fields
 - Automatic planning and work-date suggestions
-- Deadline conflict detection and proactive alerts
-- Morning briefings and reminders
-- Web + mobile clients backed by a shared API
+- Deadline conflict detection and proactive reminders
+- Morning briefings and notification workflows
+- Unified backend powering web and mobile clients
 
-## Repository structure
+## Repository overview
 
 ```text
 platodo/
-├── backend                Express API, auth, planner, AI parsing
-├── frontend               Next.js web app
-├── mobile/platodo-mobile  Expo React Native app
-├── functions              Azure Functions timers and scheduled jobs
-└── .github/workflows      CI/CD pipelines
+├── backend                Express API, authentication, planner, AI parsing
+├── frontend               Next.js web application
+├── mobile/platodo-mobile  Expo React Native mobile application
+├── functions              Azure Functions for scheduled background jobs
+└── .github/workflows      CI/CD workflows
 ```
 
-## Prerequisites
+## Core services
 
-- Node.js 20+
-- npm 10+
-- Azure SQL Database
-- Azure OpenAI deployment
-- Firebase project/service account (push notifications)
-- Optional: Azure Communication Services Email (verification and reset emails)
-- Optional: Azure Functions Core Tools v4 (local Functions runtime)
+- **Backend API (`backend`)**: Handles authentication, task management, planner logic, and AI-assisted parsing.
+- **Web app (`frontend`)**: Browser client for task input, planning views, and account usage.
+- **Mobile app (`mobile/platodo-mobile`)**: Mobile interface for planning and notifications.
+- **Background jobs (`functions`)**: Time-based automations such as deadline checks and morning briefings.
 
-## Installation
+## Platform dependencies
 
-Install dependencies for each app:
+- Azure SQL Database for persistent task and user data
+- Azure OpenAI for natural-language understanding and planning support
+- Firebase for push notification delivery
+- Optional Azure Communication Services Email for account emails
 
-```bash
-cd backend && npm install
-cd ../frontend && npm install
-cd ../mobile/platodo-mobile && npm install
-cd ../../functions && npm install
-```
+## Operations and quality
 
-> In restricted/offline environments, `functions` install may fail while downloading Azure Functions Core Tools.
+- Backend deployment status is visible via the workflow badge above
+- CI/CD configuration is stored in `.github/workflows/main_platodo-api-5202.yml`
+- Functions package currently exposes a placeholder test command
 
-## Environment setup
+## Additional project references
 
-### Backend: `backend/.env`
+- Web app details: `frontend/README.md`
+- Mobile app details: `mobile/platodo-mobile/README.md`
+- Issue tracking: <https://github.com/bohdan5202/platodo/issues>
 
-```bash
-PORT=8080
-BACKEND_URL=http://localhost:8080
-FRONTEND_URL=http://localhost:3000
+## Maintainer
 
-AZURE_SQL_CONNECTION_STRING=<your_sql_connection_string>
-JWT_SECRET=<your_jwt_secret>
-
-AZURE_OPENAI_ENDPOINT=<your_azure_openai_endpoint>
-AZURE_OPENAI_KEY=<your_azure_openai_key>
-AZURE_OPENAI_DEPLOYMENT=<your_deployment_name>
-
-FIREBASE_CREDENTIALS=<json_stringified_service_account>
-
-# Optional for email verification / reset
-ACS_CONNECTION_STRING=<your_acs_connection_string>
-ACS_SENDER_EMAIL=<your_verified_sender>
-```
-
-### Frontend: `frontend/.env.local`
-
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8080
-```
-
-### Mobile: `mobile/platodo-mobile/.env`
-
-```bash
-EXPO_PUBLIC_API_URL=http://10.0.2.2:8080
-```
-
-### Functions: `functions/local.settings.json`
-
-Provide the same core values as backend:
-
-- `AZURE_SQL_CONNECTION_STRING`
-- `AZURE_OPENAI_ENDPOINT`
-- `AZURE_OPENAI_KEY`
-- `AZURE_OPENAI_DEPLOYMENT`
-- `FIREBASE_CREDENTIALS`
-
-## Script reference
-
-### Backend (`backend/package.json`)
-
-- `npm run dev` — start API with nodemon
-- `npm start` — start API with Node.js
-
-### Frontend (`frontend/package.json`)
-
-- `npm run dev` — start Next.js dev server
-- `npm run build` — production build
-- `npm run start` — production server
-- `npm run lint` — ESLint
-
-### Mobile (`mobile/platodo-mobile/package.json`)
-
-- `npm run start` — Expo dev server
-- `npm run android` — Android target
-- `npm run ios` — iOS target
-- `npm run web` — Expo web target
-- `npm run lint` — Expo lint
-
-### Functions (`functions/package.json`)
-
-- `npm run start` — Azure Functions host
-- `npm run test` — placeholder test script
-
-## Support
-
-- Open issues: <https://github.com/bohdan5202/platodo/issues>
-- App-specific docs:
-  - `frontend/README.md`
-  - `mobile/platodo-mobile/README.md`
-- CI workflow:
-  - `.github/workflows/main_platodo-api-5202.yml`
-
-## Contributing
-
-Maintainer: [@bohdan5202](https://github.com/bohdan5202)
-
-Contributions are welcome:
-
-1. Fork the repository
-2. Create a feature branch
-3. Keep changes focused with clear commit messages
-4. Open a pull request with context, test notes, and screenshots for UI changes
-
-For larger changes, open an issue first to align on scope.
+[@bohdan5202](https://github.com/bohdan5202)
