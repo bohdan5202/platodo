@@ -91,47 +91,6 @@ Provide the same core values as backend:
 - `AZURE_OPENAI_DEPLOYMENT`
 - `FIREBASE_CREDENTIALS`
 
-## Run locally
-
-### Backend
-
-```bash
-cd backend
-npm run dev
-```
-
-API base URL: `http://localhost:8080`
-
-### Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-Web app: `http://localhost:3000`
-
-### Mobile (Expo)
-
-```bash
-cd mobile/platodo-mobile
-npm run start
-```
-
-### Azure Functions (optional)
-
-```bash
-cd functions
-npm run start
-```
-
-## Web app quick start
-
-1. Start backend (`backend`) and frontend (`frontend`).
-2. Open `http://localhost:3000` in your browser.
-3. Register a new account in the web UI.
-4. Create tasks in natural language and review your planner in the app.
-
 ## Script reference
 
 ### Backend (`backend/package.json`)
